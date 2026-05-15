@@ -29,8 +29,11 @@ type NavEntry = { to: string; label: string; icon: typeof Home };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const isLanding = loc.pathname === "/";
+  const isOwner = user?.email?.toLowerCase() === OWNER_EMAIL;
+  const NAV: readonly NavEntry[] = isOwner ? [...NAV_BASE, OWNER_NAV] : NAV_BASE;
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -88,7 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur-xl">
         <div className="grid grid-cols-5">
-          {NAV.slice(0, 5).map((n) => {
+          {NAV_BASE.slice(0, 5).map((n) => {
             const active = loc.pathname === n.to;
             return (
               <Link key={n.to} to={n.to} className={`flex flex-col items-center gap-1 py-2 text-[10px] ${active ? "text-gold" : "text-muted-foreground"}`}>
