@@ -27,7 +27,7 @@ function Pricing() {
   const suggest = async () => {
     if (!q.trim()) return;
     setBusy(true); setErr(null); setA(null);
-    const res = await ask({ data: { kind: "pricing", prompt: q } });
+    const res = await ask({ data: { kind: "pricing", prompt: `${homeProfileContext()}\n\nCustomer request: ${q}` } });
     if (res.ok) setA(res.text);
     else setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
     setBusy(false);
