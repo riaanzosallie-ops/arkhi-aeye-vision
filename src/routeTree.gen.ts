@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SnapCompareRouteImport } from './routes/snap-compare'
 import { Route as ScannerRouteImport } from './routes/scanner'
+import { Route as HomeProfileRouteImport } from './routes/home-profile'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SnapCompareRoute = SnapCompareRouteImport.update({
@@ -23,6 +24,11 @@ const ScannerRoute = ScannerRouteImport.update({
   path: '/scanner',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeProfileRoute = HomeProfileRouteImport.update({
+  id: '/home-profile',
+  path: '/home-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/home-profile': typeof HomeProfileRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/home-profile': typeof HomeProfileRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/home-profile': typeof HomeProfileRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/scanner' | '/snap-compare'
+  fullPaths: '/' | '/home-profile' | '/scanner' | '/snap-compare'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/scanner' | '/snap-compare'
-  id: '__root__' | '/' | '/scanner' | '/snap-compare'
+  to: '/' | '/home-profile' | '/scanner' | '/snap-compare'
+  id: '__root__' | '/' | '/home-profile' | '/scanner' | '/snap-compare'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HomeProfileRoute: typeof HomeProfileRoute
   ScannerRoute: typeof ScannerRoute
   SnapCompareRoute: typeof SnapCompareRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScannerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home-profile': {
+      id: '/home-profile'
+      path: '/home-profile'
+      fullPath: '/home-profile'
+      preLoaderRoute: typeof HomeProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HomeProfileRoute: HomeProfileRoute,
   ScannerRoute: ScannerRoute,
   SnapCompareRoute: SnapCompareRoute,
 }
