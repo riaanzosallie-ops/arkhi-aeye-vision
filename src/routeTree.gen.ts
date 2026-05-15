@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SnapCompareRouteImport } from './routes/snap-compare'
 import { Route as ScannerRouteImport } from './routes/scanner'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SnapCompareRoute = SnapCompareRouteImport.update({
+  id: '/snap-compare',
+  path: '/snap-compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ScannerRoute = ScannerRouteImport.update({
   id: '/scanner',
   path: '/scanner',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/scanner': typeof ScannerRoute
+  '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/scanner': typeof ScannerRoute
+  '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/scanner': typeof ScannerRoute
+  '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/scanner'
+  fullPaths: '/' | '/scanner' | '/snap-compare'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/scanner'
-  id: '__root__' | '/' | '/scanner'
+  to: '/' | '/scanner' | '/snap-compare'
+  id: '__root__' | '/' | '/scanner' | '/snap-compare'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ScannerRoute: typeof ScannerRoute
+  SnapCompareRoute: typeof SnapCompareRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/snap-compare': {
+      id: '/snap-compare'
+      path: '/snap-compare'
+      fullPath: '/snap-compare'
+      preLoaderRoute: typeof SnapCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/scanner': {
       id: '/scanner'
       path: '/scanner'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ScannerRoute: ScannerRoute,
+  SnapCompareRoute: SnapCompareRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
