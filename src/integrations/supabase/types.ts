@@ -14,7 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          budget: string | null
+          created_at: string
+          id: string
+          name: string
+          rooms_count: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          budget?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          rooms_count?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          budget?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          rooms_count?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          id: string
+          last_scanned: string | null
+          name: string
+          photos: number
+          score: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          last_scanned?: string | null
+          name: string
+          photos?: number
+          score?: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          last_scanned?: string | null
+          name?: string
+          photos?: number
+          score?: number
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          created_at: string
+          id: string
+          image_path: string | null
+          kind: string
+          result: Json | null
+          secondary_path: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          kind: string
+          result?: Json | null
+          secondary_path?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          kind?: string
+          result?: Json | null
+          secondary_path?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
