@@ -51,7 +51,7 @@ function ScannerPage() {
   const runAI = async () => {
     setAiErr(null);
     setAiText(null);
-    const prompt = `Room photo uploaded${storagePath ? ` (${storagePath})` : ""}. User notes: ${notes || "none"}. Provide concise scan feedback.`;
+    const prompt = `${homeProfileContext()}\n\nRoom photo uploaded${storagePath ? ` (${storagePath})` : ""}. User notes: ${notes || "none"}.\nReturn confidence-to-purchase scan with recommended partner product, upsell, and estimated full-room basket value (AED).`;
     const res = await ask({ data: { kind: "scanner", prompt } });
     if (res.ok) {
       setAiText(res.text);
