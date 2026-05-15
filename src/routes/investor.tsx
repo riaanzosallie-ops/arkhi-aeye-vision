@@ -131,8 +131,9 @@ function Investor() {
     <div className="max-w-7xl mx-auto">
       <PageHeader
         eyebrow="Owner · RIAANZO"
-        title={<>Investor <span className="text-gradient-gold">Mode</span></>}
+        title={<>Welcome back, <span className="text-gradient-gold">Owner</span></>}
         subtitle="Confidence-to-purchase technology for furniture retailers. SaaS + white-label + commission. UAE first, then GCC."
+        actions={<GhostButton onClick={() => supabase.auth.signOut()}><LogOut className="inline size-4 mr-1" />Sign out</GhostButton>}
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
