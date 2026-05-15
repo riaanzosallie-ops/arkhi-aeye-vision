@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/useAuth";
 import { uploadUserFile } from "@/lib/upload";
 import { supabase } from "@/integrations/supabase/client";
 import { aiAsk } from "@/lib/ai.functions";
+import { homeProfileContext } from "@/lib/homeContext";
 
 export const Route = createFileRoute("/scanner")({ component: ScannerPage });
 
