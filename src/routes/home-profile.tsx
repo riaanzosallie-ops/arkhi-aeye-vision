@@ -99,6 +99,8 @@ function HomeProfile() {
         </LuxeCard>
       )}
 
+      <PreferencesCard />
+
       {rooms.length === 0 ? (
         <LuxeCard className="p-12 text-center">
           <Camera className="size-10 text-gold mx-auto mb-3" />
