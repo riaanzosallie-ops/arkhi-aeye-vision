@@ -38,7 +38,7 @@ function Pricing() {
       <PageHeader
         eyebrow="Shopping Intelligence"
         title={<>Pricing & <span className="text-gradient-gold">Purchase Finder</span></>}
-        subtitle="A-Eye-curated shopping list across UAE retailers with fit and style scoring."
+        subtitle="A-Eye-curated full-room shopping plans across UAE retailers — fit, style, and confidence-to-purchase scoring. Estimated price ranges; catalogue integration required for live SKUs."
         actions={<GoldButton>Export list</GoldButton>}
       />
 
