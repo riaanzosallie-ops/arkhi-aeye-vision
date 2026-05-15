@@ -4,6 +4,7 @@ import { Plus, Camera } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
+import { getHomePrefs, setHomePrefs, type HomePrefs } from "@/lib/homeContext";
 
 export const Route = createFileRoute("/home-profile")({ component: HomeProfile });
 
