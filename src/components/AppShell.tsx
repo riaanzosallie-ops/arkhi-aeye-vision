@@ -4,8 +4,12 @@ import {
   Building2, TrendingUp, FolderKanban, MessagesSquare, User2, Eye,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { FloatingAEye } from "@/components/FloatingAEye";
+import { useAuth } from "@/lib/useAuth";
 
-export const NAV = [
+export const OWNER_EMAIL = "riaanzosallie@gmail.com";
+
+export const NAV_BASE = [
   { to: "/", label: "Home", icon: Home },
   { to: "/design", label: "Design Space", icon: LayoutGrid },
   { to: "/home-profile", label: "My Home", icon: House },
@@ -14,16 +18,22 @@ export const NAV = [
   { to: "/floor-plan", label: "Floor Plan AI", icon: Map },
   { to: "/pricing", label: "Pricing & Buy", icon: ShoppingBag },
   { to: "/companies", label: "Company Hub", icon: Building2 },
-  { to: "/investor", label: "Investor Mode", icon: TrendingUp },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/chat", label: "A-Eye Chat", icon: MessagesSquare },
   { to: "/profile", label: "Profile", icon: User2 },
 ] as const;
 
+const OWNER_NAV = { to: "/investor", label: "Investor Mode", icon: TrendingUp } as const;
+
+type NavEntry = { to: string; label: string; icon: typeof Home };
+
 export function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const isLanding = loc.pathname === "/";
+  const isOwner = user?.email?.toLowerCase() === OWNER_EMAIL;
+  const NAV: readonly NavEntry[] = isOwner ? [...NAV_BASE, OWNER_NAV] : NAV_BASE;
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -81,7 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur-xl">
         <div className="grid grid-cols-5">
-          {NAV.slice(0, 5).map((n) => {
+          {NAV_BASE.slice(0, 5).map((n) => {
             const active = loc.pathname === n.to;
             return (
               <Link key={n.to} to={n.to} className={`flex flex-col items-center gap-1 py-2 text-[10px] ${active ? "text-gold" : "text-muted-foreground"}`}>
@@ -92,6 +102,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+
+      <FloatingAEye />
     </div>
   );
 }
