@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Camera } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/home-profile")({ component: HomeProfile });
 
@@ -12,24 +14,62 @@ type Room = { id: string; name: string; type: string; photos: number; score: num
 const KEY = "arkhi2:rooms";
 
 function HomeProfile() {
+  const { user } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState(ROOM_TYPES[0]);
+  const [cloud, setCloud] = useState<"unknown" | "ok" | "down">("unknown");
 
   useEffect(() => {
     try { setRooms(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch { /* */ }
   }, []);
 
-  const save = (next: Room[]) => {
+  useEffect(() => {
+    if (!user) { setCloud("unknown"); return; }
+    (async () => {
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("id,name,type,photos,score,last_scanned")
+        .order("created_at", { ascending: false });
+      if (error) { setCloud("down"); return; }
+      setCloud("ok");
+      const cloudRooms: Room[] = (data ?? []).map(r => ({
+        id: r.id, name: r.name, type: r.type, photos: r.photos ?? 0, score: r.score ?? 0, lastScanned: r.last_scanned ?? "—",
+      }));
+      // Merge cloud + local; cloud wins on duplicates by id
+      setRooms(prev => {
+        const map = new Map(prev.map(r => [r.id, r] as const));
+        cloudRooms.forEach(r => map.set(r.id, r));
+        return Array.from(map.values());
+      });
+    })();
+  }, [user]);
+
+  const persistLocal = (next: Room[]) => {
     setRooms(next);
     localStorage.setItem(KEY, JSON.stringify(next));
   };
 
-  const addRoom = () => {
+  const addRoom = async () => {
     if (!name.trim()) return;
-    save([...rooms, { id: crypto.randomUUID(), name, type, photos: 0, score: 0, lastScanned: "—" }]);
+    const optimistic: Room = { id: crypto.randomUUID(), name, type, photos: 0, score: 0, lastScanned: "—" };
+    persistLocal([...rooms, optimistic]);
     setName(""); setAdding(false);
+    if (user) {
+      const { data, error } = await supabase
+        .from("rooms")
+        .insert({ user_id: user.id, name: optimistic.name, type: optimistic.type })
+        .select("id")
+        .single();
+      if (!error && data) {
+        // Replace local id with cloud id
+        setRooms(prev => prev.map(r => r.id === optimistic.id ? { ...r, id: data.id } : r));
+        setCloud("ok");
+      } else {
+        setCloud("down");
+      }
+    }
   };
 
   return (
@@ -37,7 +77,9 @@ function HomeProfile() {
       <PageHeader
         eyebrow="Your Space"
         title={<>My Home <span className="text-gradient-gold">Profile</span></>}
-        subtitle="Save rooms, attach photos, store dimensions, and track redesign history. Saved locally — sync activates with backend."
+        subtitle={user
+          ? (cloud === "ok" ? "Cloud sync active. Rooms saved to your account." : "Cloud sync unavailable — saving locally.")
+          : "Sign in to sync rooms across devices. Currently saved locally."}
         actions={<GoldButton onClick={() => setAdding(true)}><Plus className="inline size-4 mr-1" />Add room</GoldButton>}
       />
 
