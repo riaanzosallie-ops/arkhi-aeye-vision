@@ -18,6 +18,7 @@ import { Route as HomeProfileRouteImport } from './routes/home-profile'
 import { Route as FloorPlanRouteImport } from './routes/floor-plan'
 import { Route as DesignRouteImport } from './routes/design'
 import { Route as CompaniesRouteImport } from './routes/companies'
+import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SnapCompareRoute = SnapCompareRouteImport.update({
@@ -65,6 +66,11 @@ const CompaniesRoute = CompaniesRouteImport.update({
   path: '/companies',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,6 +79,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/companies': typeof CompaniesRoute
   '/design': typeof DesignRoute
   '/floor-plan': typeof FloorPlanRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/companies': typeof CompaniesRoute
   '/design': typeof DesignRoute
   '/floor-plan': typeof FloorPlanRoute
@@ -98,6 +106,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/companies': typeof CompaniesRoute
   '/design': typeof DesignRoute
   '/floor-plan': typeof FloorPlanRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/chat'
     | '/companies'
     | '/design'
     | '/floor-plan'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/chat'
     | '/companies'
     | '/design'
     | '/floor-plan'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/chat'
     | '/companies'
     | '/design'
     | '/floor-plan'
@@ -149,6 +161,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRoute: typeof ChatRoute
   CompaniesRoute: typeof CompaniesRoute
   DesignRoute: typeof DesignRoute
   FloorPlanRoute: typeof FloorPlanRoute
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -237,6 +257,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRoute: ChatRoute,
   CompaniesRoute: CompaniesRoute,
   DesignRoute: DesignRoute,
   FloorPlanRoute: FloorPlanRoute,
