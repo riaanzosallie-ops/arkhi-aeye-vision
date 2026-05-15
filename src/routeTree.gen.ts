@@ -9,8 +9,74 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SnapCompareRouteImport } from './routes/snap-compare'
+import { Route as ScannerRouteImport } from './routes/scanner'
+import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as InvestorRouteImport } from './routes/investor'
+import { Route as HomeProfileRouteImport } from './routes/home-profile'
+import { Route as FloorPlanRouteImport } from './routes/floor-plan'
+import { Route as DesignRouteImport } from './routes/design'
+import { Route as CompaniesRouteImport } from './routes/companies'
+import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SnapCompareRoute = SnapCompareRouteImport.update({
+  id: '/snap-compare',
+  path: '/snap-compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScannerRoute = ScannerRouteImport.update({
+  id: '/scanner',
+  path: '/scanner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestorRoute = InvestorRouteImport.update({
+  id: '/investor',
+  path: '/investor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeProfileRoute = HomeProfileRouteImport.update({
+  id: '/home-profile',
+  path: '/home-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FloorPlanRoute = FloorPlanRouteImport.update({
+  id: '/floor-plan',
+  path: '/floor-plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignRoute = DesignRouteImport.update({
+  id: '/design',
+  path: '/design',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesRoute = CompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +85,186 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/companies': typeof CompaniesRoute
+  '/design': typeof DesignRoute
+  '/floor-plan': typeof FloorPlanRoute
+  '/home-profile': typeof HomeProfileRoute
+  '/investor': typeof InvestorRoute
+  '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
+  '/projects': typeof ProjectsRoute
+  '/scanner': typeof ScannerRoute
+  '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/companies': typeof CompaniesRoute
+  '/design': typeof DesignRoute
+  '/floor-plan': typeof FloorPlanRoute
+  '/home-profile': typeof HomeProfileRoute
+  '/investor': typeof InvestorRoute
+  '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
+  '/projects': typeof ProjectsRoute
+  '/scanner': typeof ScannerRoute
+  '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/companies': typeof CompaniesRoute
+  '/design': typeof DesignRoute
+  '/floor-plan': typeof FloorPlanRoute
+  '/home-profile': typeof HomeProfileRoute
+  '/investor': typeof InvestorRoute
+  '/pricing': typeof PricingRoute
+  '/profile': typeof ProfileRoute
+  '/projects': typeof ProjectsRoute
+  '/scanner': typeof ScannerRoute
+  '/snap-compare': typeof SnapCompareRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/companies'
+    | '/design'
+    | '/floor-plan'
+    | '/home-profile'
+    | '/investor'
+    | '/pricing'
+    | '/profile'
+    | '/projects'
+    | '/scanner'
+    | '/snap-compare'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/chat'
+    | '/companies'
+    | '/design'
+    | '/floor-plan'
+    | '/home-profile'
+    | '/investor'
+    | '/pricing'
+    | '/profile'
+    | '/projects'
+    | '/scanner'
+    | '/snap-compare'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/companies'
+    | '/design'
+    | '/floor-plan'
+    | '/home-profile'
+    | '/investor'
+    | '/pricing'
+    | '/profile'
+    | '/projects'
+    | '/scanner'
+    | '/snap-compare'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRoute: typeof ChatRoute
+  CompaniesRoute: typeof CompaniesRoute
+  DesignRoute: typeof DesignRoute
+  FloorPlanRoute: typeof FloorPlanRoute
+  HomeProfileRoute: typeof HomeProfileRoute
+  InvestorRoute: typeof InvestorRoute
+  PricingRoute: typeof PricingRoute
+  ProfileRoute: typeof ProfileRoute
+  ProjectsRoute: typeof ProjectsRoute
+  ScannerRoute: typeof ScannerRoute
+  SnapCompareRoute: typeof SnapCompareRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/snap-compare': {
+      id: '/snap-compare'
+      path: '/snap-compare'
+      fullPath: '/snap-compare'
+      preLoaderRoute: typeof SnapCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scanner': {
+      id: '/scanner'
+      path: '/scanner'
+      fullPath: '/scanner'
+      preLoaderRoute: typeof ScannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investor': {
+      id: '/investor'
+      path: '/investor'
+      fullPath: '/investor'
+      preLoaderRoute: typeof InvestorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home-profile': {
+      id: '/home-profile'
+      path: '/home-profile'
+      fullPath: '/home-profile'
+      preLoaderRoute: typeof HomeProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/floor-plan': {
+      id: '/floor-plan'
+      path: '/floor-plan'
+      fullPath: '/floor-plan'
+      preLoaderRoute: typeof FloorPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design': {
+      id: '/design'
+      path: '/design'
+      fullPath: '/design'
+      preLoaderRoute: typeof DesignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies': {
+      id: '/companies'
+      path: '/companies'
+      fullPath: '/companies'
+      preLoaderRoute: typeof CompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +277,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRoute: ChatRoute,
+  CompaniesRoute: CompaniesRoute,
+  DesignRoute: DesignRoute,
+  FloorPlanRoute: FloorPlanRoute,
+  HomeProfileRoute: HomeProfileRoute,
+  InvestorRoute: InvestorRoute,
+  PricingRoute: PricingRoute,
+  ProfileRoute: ProfileRoute,
+  ProjectsRoute: ProjectsRoute,
+  ScannerRoute: ScannerRoute,
+  SnapCompareRoute: SnapCompareRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
