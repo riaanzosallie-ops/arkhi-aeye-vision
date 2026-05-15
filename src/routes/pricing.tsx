@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Sparkles } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
 import { aiAsk } from "@/lib/ai.functions";
+import { homeProfileContext } from "@/lib/homeContext";
 
 export const Route = createFileRoute("/pricing")({ component: Pricing });
 
