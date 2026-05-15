@@ -67,37 +67,61 @@ export type Database = {
       }
       rooms: {
         Row: {
+          analysis: string | null
           cover_url: string | null
           created_at: string
           id: string
+          images: Json
           last_scanned: string | null
+          length_m: number | null
           name: string
+          notes: string | null
           photos: number
+          rating: Json | null
           score: number
+          style_category: string | null
           type: string
           user_id: string
+          warmth_score: number | null
+          width_m: number | null
         }
         Insert: {
+          analysis?: string | null
           cover_url?: string | null
           created_at?: string
           id?: string
+          images?: Json
           last_scanned?: string | null
+          length_m?: number | null
           name: string
+          notes?: string | null
           photos?: number
+          rating?: Json | null
           score?: number
+          style_category?: string | null
           type: string
           user_id: string
+          warmth_score?: number | null
+          width_m?: number | null
         }
         Update: {
+          analysis?: string | null
           cover_url?: string | null
           created_at?: string
           id?: string
+          images?: Json
           last_scanned?: string | null
+          length_m?: number | null
           name?: string
+          notes?: string | null
           photos?: number
+          rating?: Json | null
           score?: number
+          style_category?: string | null
           type?: string
           user_id?: string
+          warmth_score?: number | null
+          width_m?: number | null
         }
         Relationships: []
       }
