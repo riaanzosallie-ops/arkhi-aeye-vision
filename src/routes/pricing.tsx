@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Sparkles } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
 import { aiAsk } from "@/lib/ai.functions";
+import { homeProfileContext } from "@/lib/homeContext";
 
 export const Route = createFileRoute("/pricing")({ component: Pricing });
 
@@ -26,7 +27,7 @@ function Pricing() {
   const suggest = async () => {
     if (!q.trim()) return;
     setBusy(true); setErr(null); setA(null);
-    const res = await ask({ data: { kind: "pricing", prompt: q } });
+    const res = await ask({ data: { kind: "pricing", prompt: `${homeProfileContext()}\n\nCustomer request: ${q}` } });
     if (res.ok) setA(res.text);
     else setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
     setBusy(false);
@@ -37,7 +38,7 @@ function Pricing() {
       <PageHeader
         eyebrow="Shopping Intelligence"
         title={<>Pricing & <span className="text-gradient-gold">Purchase Finder</span></>}
-        subtitle="A-Eye-curated shopping list across UAE retailers with fit and style scoring."
+        subtitle="A-Eye-curated full-room shopping plans across UAE retailers — fit, style, and confidence-to-purchase scoring. Estimated price ranges; catalogue integration required for live SKUs."
         actions={<GoldButton>Export list</GoldButton>}
       />
 

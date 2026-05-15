@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/useAuth";
 import { uploadUserFile } from "@/lib/upload";
 import { supabase } from "@/integrations/supabase/client";
 import { aiAsk } from "@/lib/ai.functions";
+import { homeProfileContext } from "@/lib/homeContext";
 
 export const Route = createFileRoute("/snap-compare")({ component: SnapCompare });
 
@@ -38,7 +39,7 @@ function SnapCompare() {
     setBusy(true);
     setAiErr(null);
     setAiText(null);
-    const prompt = `Furniture item ${itemPath ?? "(local)"} vs room ${roomPath ?? "(local)"}. Item dims: width ${width || "?"}cm × depth ${depth || "?"}cm. Score fit & style, give clearance verdict and a 2-line recommendation.`;
+    const prompt = `${homeProfileContext()}\n\nFurniture item ${itemPath ?? "(local)"} vs room ${roomPath ?? "(local)"}. Item dims: width ${width || "?"}cm × depth ${depth || "?"}cm.\nDecide: Will it fit? Will it match the saved room/style? Should the customer buy now, hold, or pick an alternative? Suggest matching add-ons and an estimated basket value.`;
     const res = await ask({ data: { kind: "snap", prompt } });
     if (res.ok) {
       setAiText(res.text);

@@ -4,6 +4,7 @@ import { Plus, Camera } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
+import { getHomePrefs, setHomePrefs, type HomePrefs } from "@/lib/homeContext";
 
 export const Route = createFileRoute("/home-profile")({ component: HomeProfile });
 
@@ -98,6 +99,8 @@ function HomeProfile() {
         </LuxeCard>
       )}
 
+      <PreferencesCard />
+
       {rooms.length === 0 ? (
         <LuxeCard className="p-12 text-center">
           <Camera className="size-10 text-gold mx-auto mb-3" />
@@ -129,5 +132,34 @@ function HomeProfile() {
         </div>
       )}
     </div>
+  );
+}
+
+function PreferencesCard() {
+  const [prefs, setPrefs] = useState<HomePrefs>({});
+  useEffect(() => { setPrefs(getHomePrefs()); }, []);
+  const update = (k: keyof HomePrefs, v: string) => {
+    const next = { ...prefs, [k]: v };
+    setPrefs(next);
+    setHomePrefs(next);
+  };
+  const Field = ({ k, label, placeholder }: { k: keyof HomePrefs; label: string; placeholder: string }) => (
+    <label className="block">
+      <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-1.5">{label}</div>
+      <input value={prefs[k] ?? ""} onChange={(e) => update(k, e.target.value)} placeholder={placeholder}
+        className="w-full bg-input/40 hairline rounded-lg px-3 py-2 text-sm" />
+    </label>
+  );
+  return (
+    <LuxeCard className="p-6 mt-6">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-1">Home preferences</div>
+      <div className="text-xs text-muted-foreground mb-4">Used by A-Eye for fit, style match, and partner product recommendations.</div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Field k="style" label="Preferred style" placeholder="e.g. modern beige, Japandi" />
+        <Field k="budget" label="Budget (AED)" placeholder="e.g. 8,000 – 15,000" />
+        <Field k="colors" label="Preferred colours" placeholder="e.g. warm neutrals, brass" />
+        <Field k="retailer" label="Preferred retailer" placeholder="Pan Emirates / Danube / IKEA UAE" />
+      </div>
+    </LuxeCard>
   );
 }

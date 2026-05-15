@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/useAuth";
 import { uploadUserFile } from "@/lib/upload";
 import { supabase } from "@/integrations/supabase/client";
 import { aiAsk } from "@/lib/ai.functions";
+import { homeProfileContext } from "@/lib/homeContext";
 
 export const Route = createFileRoute("/floor-plan")({ component: FloorPlan });
 
@@ -32,7 +33,7 @@ function FloorPlan() {
 
   const analyze = async () => {
     setBusy(true); setAiErr(null); setAiText(null);
-    const prompt = `Floor plan ${path ?? "(local only)"}. Dimensions WxDxH: ${dims.w || "?"}×${dims.d || "?"}×${dims.h || "?"}m, doors: ${dims.doors || "?"}. Suggest zoning, key placements and an AED redesign budget range.`;
+    const prompt = `${homeProfileContext()}\n\nFloor plan ${path ?? "(local only)"}. Dimensions WxDxH: ${dims.w || "?"}×${dims.d || "?"}×${dims.h || "?"}m, doors: ${dims.doors || "?"}.\nDeliver zoning, recommended partner products per zone (Pan Emirates / Danube Home / IKEA UAE / Home Centre), full-room shopping list, estimated AED redesign budget range, and customer next step.`;
     const res = await ask({ data: { kind: "floorplan", prompt } });
     if (res.ok) {
       setAiText(res.text);
