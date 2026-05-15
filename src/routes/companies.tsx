@@ -45,7 +45,8 @@ function Companies() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
           {[
-            ["Branches", "12"], ["Catalogue items", "1,840"], ["Active leads", "237"], ["Conversion", "18.4%"],
+            ["Scans generated", "1,284"], ["Leads captured", "237"], ["Avg basket value", "AED 6,420"], ["Conversion stage", "Mid-funnel"],
+            ["Top category", "Sectionals"], ["Catalogue items", "1,840"], ["Branches", "12"], ["Partner ROI est.", "4.8×"],
           ].map(([k, v]) => (
             <div key={k} className="hairline rounded-lg p-4">
               <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{k}</div>
@@ -53,6 +54,26 @@ function Companies() {
             </div>
           ))}
         </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
+          {[
+            ["Customer Room Leads", "Room scans become qualified leads in the partner dashboard."],
+            ["AI Product Recommendations", "A-Eye matches catalogue SKUs to scanned rooms."],
+            ["Catalogue Conversion Engine", "Turn product views into confidence-to-purchase scores."],
+            ["QR Showroom Campaigns", "Per-branch QR codes launch Snap & Compare in-store."],
+            ["Basket Value Growth", "Upsell add-ons after every fit verdict."],
+            ["Repeat Purchase Profiles", "My Home Profile drives next-room journeys."],
+            ["Branch Performance Analytics", "Scans, leads, basket value, conversion per branch."],
+            ["White-Label AI Planner", "Partner-branded scanner, snap & compare, floor plan."],
+            ["Sales Consultant Mode", "Showroom staff use A-Eye to close on the floor."],
+          ].map(([t, d]) => (
+            <div key={t} className="hairline rounded-lg p-4">
+              <div className="text-sm font-display text-gold">{t}</div>
+              <div className="text-xs text-muted-foreground mt-1">{d}</div>
+            </div>
+          ))}
+        </div>
+
         <div className="flex gap-2 mt-6">
           <GoldButton>Open partner dashboard</GoldButton>
         </div>
