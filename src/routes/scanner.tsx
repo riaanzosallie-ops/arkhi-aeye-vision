@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Upload, ScanLine, X, Sparkles } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton, GhostButton } from "@/components/ui-kit";
+import { useAuth } from "@/lib/useAuth";
+import { uploadUserFile } from "@/lib/upload";
+import { supabase } from "@/integrations/supabase/client";
+import { aiAsk } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/scanner")({ component: ScannerPage });
 
@@ -18,25 +23,63 @@ const STAGES = [
 ];
 
 function ScannerPage() {
+  const { user } = useAuth();
+  const ask = useServerFn(aiAsk);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [storagePath, setStoragePath] = useState<string | null>(null);
+  const [cloudMsg, setCloudMsg] = useState<string | null>(null);
   const [stage, setStage] = useState(-1);
   const [done, setDone] = useState(false);
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiErr, setAiErr] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (stage < 0 || done) return;
-    if (stage >= STAGES.length) { setDone(true); return; }
+    if (stage >= STAGES.length) {
+      setDone(true);
+      void runAI();
+      return;
+    }
     const t = setTimeout(() => setStage((s) => s + 1), 700);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, done]);
 
-  const onFile = (f: File) => {
+  const runAI = async () => {
+    setAiErr(null);
+    setAiText(null);
+    const prompt = `Room photo uploaded${storagePath ? ` (${storagePath})` : ""}. User notes: ${notes || "none"}. Provide concise scan feedback.`;
+    const res = await ask({ data: { kind: "scanner", prompt } });
+    if (res.ok) {
+      setAiText(res.text);
+      if (user && storagePath) {
+        await supabase.from("scans").insert({
+          user_id: user.id, kind: "room", image_path: storagePath, result: { feedback: res.text },
+        });
+      }
+    } else {
+      setAiErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
+    }
+  };
+
+  const onFile = async (f: File) => {
     setImageUrl(URL.createObjectURL(f));
     setDone(false);
     setStage(0);
+    setStoragePath(null);
+    setCloudMsg(null);
+    if (user) {
+      const up = await uploadUserFile("room-photos", f);
+      if (up.ok) { setStoragePath(up.path); setCloudMsg("Uploaded to your cloud."); }
+      else setCloudMsg("Cloud sync unavailable — preview only.");
+    } else {
+      setCloudMsg("Sign in to save this scan to your cloud.");
+    }
   };
 
-  const reset = () => { setImageUrl(null); setStage(-1); setDone(false); };
+  const reset = () => { setImageUrl(null); setStage(-1); setDone(false); setAiText(null); setAiErr(null); setStoragePath(null); setCloudMsg(null); };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -48,7 +91,6 @@ function ScannerPage() {
       />
 
       <div className="grid lg:grid-cols-5 gap-6">
-        {/* SCAN AREA */}
         <div className="lg:col-span-3">
           <LuxeCard className="relative aspect-[4/3] overflow-hidden grain">
             {!imageUrl ? (
@@ -89,14 +131,14 @@ function ScannerPage() {
           </LuxeCard>
 
           {imageUrl && (
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-3 flex-wrap">
               <GhostButton onClick={() => fileRef.current?.click()}>Replace</GhostButton>
               <GhostButton onClick={reset}><X className="inline size-4 mr-1" />Clear</GhostButton>
+              {cloudMsg && <span className="text-xs text-muted-foreground self-center">{cloudMsg}</span>}
             </div>
           )}
         </div>
 
-        {/* STAGE PANEL */}
         <div className="lg:col-span-2 space-y-4">
           <LuxeCard className="p-5">
             <div className="text-[10px] tracking-[0.3em] uppercase text-gold mb-3">Pipeline</div>
@@ -117,29 +159,23 @@ function ScannerPage() {
             </ol>
           </LuxeCard>
 
+          {imageUrl && (
+            <LuxeCard className="p-5">
+              <div className="text-[10px] tracking-[0.3em] uppercase text-gold mb-2">Notes for A-Eye</div>
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
+                placeholder="e.g. 4×5m living room, north-facing, beige tones, sofa + TV"
+                className="w-full bg-input/40 hairline rounded-lg px-3 py-2 text-sm" />
+            </LuxeCard>
+          )}
+
           {done && (
             <LuxeCard className="p-5">
-              <div className="text-[10px] tracking-[0.3em] uppercase text-gold mb-3">Result preview</div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  ["Room Score", "82"],
-                  ["Layout", "A-"],
-                  ["Lighting", "Warm"],
-                  ["Est. Width", "4.2m"],
-                  ["Est. Depth", "5.1m"],
-                  ["Clearance", "OK"],
-                ].map(([k, v]) => (
-                  <div key={k} className="hairline rounded-lg px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
-                    <div className="font-display text-xl text-gradient-gold">{v}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                Estimated from image. Confirm dimensions manually for purchase accuracy.
-              </p>
+              <div className="text-[10px] tracking-[0.3em] uppercase text-gold mb-3">A-Eye feedback</div>
+              {aiErr && <div className="text-sm text-amber-300">{aiErr}</div>}
+              {!aiErr && !aiText && <div className="text-sm text-muted-foreground">Analyzing…</div>}
+              {aiText && <div className="text-sm whitespace-pre-wrap">{aiText}</div>}
               <div className="mt-4 flex gap-2">
-                <GoldButton>Save to Home Profile</GoldButton>
+                <GoldButton onClick={runAI}>Re-run A-Eye</GoldButton>
               </div>
             </LuxeCard>
           )}
