@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SnapCompareRouteImport } from './routes/snap-compare'
 import { Route as ScannerRouteImport } from './routes/scanner'
+import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as InvestorRouteImport } from './routes/investor'
 import { Route as HomeProfileRouteImport } from './routes/home-profile'
@@ -27,6 +28,11 @@ const SnapCompareRoute = SnapCompareRouteImport.update({
 const ScannerRoute = ScannerRouteImport.update({
   id: '/scanner',
   path: '/scanner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/home-profile': typeof HomeProfileRoute
   '/investor': typeof InvestorRoute
   '/pricing': typeof PricingRoute
+  '/projects': typeof ProjectsRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/home-profile': typeof HomeProfileRoute
   '/investor': typeof InvestorRoute
   '/pricing': typeof PricingRoute
+  '/projects': typeof ProjectsRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/home-profile': typeof HomeProfileRoute
   '/investor': typeof InvestorRoute
   '/pricing': typeof PricingRoute
+  '/projects': typeof ProjectsRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/home-profile'
     | '/investor'
     | '/pricing'
+    | '/projects'
     | '/scanner'
     | '/snap-compare'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/home-profile'
     | '/investor'
     | '/pricing'
+    | '/projects'
     | '/scanner'
     | '/snap-compare'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/home-profile'
     | '/investor'
     | '/pricing'
+    | '/projects'
     | '/scanner'
     | '/snap-compare'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   HomeProfileRoute: typeof HomeProfileRoute
   InvestorRoute: typeof InvestorRoute
   PricingRoute: typeof PricingRoute
+  ProjectsRoute: typeof ProjectsRoute
   ScannerRoute: typeof ScannerRoute
   SnapCompareRoute: typeof SnapCompareRoute
 }
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/scanner'
       fullPath: '/scanner'
       preLoaderRoute: typeof ScannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeProfileRoute: HomeProfileRoute,
   InvestorRoute: InvestorRoute,
   PricingRoute: PricingRoute,
+  ProjectsRoute: ProjectsRoute,
   ScannerRoute: ScannerRoute,
   SnapCompareRoute: SnapCompareRoute,
 }
