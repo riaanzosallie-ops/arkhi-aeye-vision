@@ -1,14 +1,106 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Lock, Sparkles } from "lucide-react";
-import { PageHeader, LuxeCard, GoldButton, StatTile } from "@/components/ui-kit";
+import { Lock, Sparkles, Eye, EyeOff, LogOut } from "lucide-react";
+import { PageHeader, LuxeCard, GoldButton, GhostButton, StatTile } from "@/components/ui-kit";
 import { useAuth } from "@/lib/useAuth";
 import { aiAsk } from "@/lib/ai.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/investor")({ component: Investor });
 
 const OWNER = "riaanzosallie@gmail.com";
+const REMEMBER_KEY = "arkhi2:remember";
+
+function OwnerLogin({ wrongAccount, currentEmail }: { wrongAccount: boolean; currentEmail?: string }) {
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [show, setShow] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [reset, setReset] = useState(false);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null); setBusy(true);
+    localStorage.setItem(REMEMBER_KEY, remember ? "1" : "0");
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw });
+    if (error) setErr(error.message);
+    setBusy(false);
+  };
+
+  const sendReset = async () => {
+    if (!email.trim()) { setErr("Enter your owner email first."); return; }
+    setErr(null); setResetMsg(null); setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/profile`,
+    });
+    if (error) setErr(error.message);
+    else setResetMsg("Reset email sent. Check your inbox.");
+    setBusy(false);
+  };
+
+  const signOut = async () => { await supabase.auth.signOut(); };
+
+  return (
+    <div className="max-w-md mx-auto pt-10">
+      <LuxeCard className="p-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="size-10 rounded-lg gradient-gold grid place-items-center text-onyx"><Lock className="size-5" /></div>
+          <div>
+            <div className="font-display text-2xl">Owner access required</div>
+            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Investor & owner dashboard</div>
+          </div>
+        </div>
+        {wrongAccount && (
+          <div className="text-xs text-amber-300 mb-4 hairline rounded-lg p-3">
+            Signed in as <span className="text-foreground">{currentEmail}</span>. This account is not the owner.
+            <button onClick={signOut} className="text-gold ml-1 underline">Sign out</button>
+          </div>
+        )}
+        {reset ? (
+          <div className="space-y-4">
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Owner email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full mt-1 bg-input/40 hairline rounded-lg px-3 py-2.5 text-sm" />
+            </div>
+            {err && <div className="text-xs text-red-400">{err}</div>}
+            {resetMsg && <div className="text-xs text-emerald-300">{resetMsg}</div>}
+            <div className="flex gap-2">
+              <GoldButton onClick={sendReset} disabled={busy} className="flex-1">{busy ? "…" : "Send reset link"}</GoldButton>
+              <GhostButton onClick={() => setReset(false)}>Back</GhostButton>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="space-y-4">
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full mt-1 bg-input/40 hairline rounded-lg px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Password</label>
+              <div className="relative mt-1">
+                <input type={show ? "text" : "password"} value={pw} onChange={(e) => setPw(e.target.value)} required minLength={6} className="w-full bg-input/40 hairline rounded-lg px-3 py-2.5 pr-10 text-sm" />
+                <button type="button" onClick={() => setShow(!show)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground p-1.5">
+                  {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <label className="flex items-center gap-2"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me</label>
+              <button type="button" onClick={() => setReset(true)} className="text-gold">Forgot password?</button>
+            </div>
+            {err && <div className="text-xs text-red-400">{err}</div>}
+            <GoldButton type="submit" className="w-full" disabled={busy}>{busy ? "…" : "Sign in to owner dashboard"}</GoldButton>
+            <div className="text-[11px] text-center text-muted-foreground">Owner access required. Investor data, revenue, and partner commercials are hidden from normal users.</div>
+          </form>
+        )}
+      </LuxeCard>
+    </div>
+  );
+}
 
 function Investor() {
   const { user, loading } = useAuth();
@@ -22,18 +114,9 @@ function Investor() {
 
   const authed = user?.email?.toLowerCase() === OWNER;
   if (!authed) {
-    return (
-      <div className="max-w-md mx-auto pt-20">
-        <LuxeCard className="p-8 text-center">
-          <Lock className="size-10 text-gold mx-auto mb-3" />
-          <div className="font-display text-2xl">Investor Mode</div>
-          <p className="text-muted-foreground text-sm mt-2">
-            Owner-only access. {user ? "This account is not authorized." : "Sign in with the authorized owner email."}
-          </p>
-        </LuxeCard>
-      </div>
-    );
+    return <OwnerLogin wrongAccount={Boolean(user)} currentEmail={user?.email ?? undefined} />;
   }
+
 
   const askInvestor = async () => {
     if (!q.trim()) return;
