@@ -17,9 +17,9 @@ function Companies() {
   return (
     <div className="max-w-7xl mx-auto">
       <PageHeader
-        eyebrow="White-Label"
+        eyebrow="Retailer Platform"
         title={<>Company <span className="text-gradient-gold">Hub</span></>}
-        subtitle="Partner workspaces with branded experiences, catalogue sync, and lead capture."
+        subtitle="White-label AI conversion engine for furniture retailers — room leads, catalogue recommendations, basket growth, and branch ROI."
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
