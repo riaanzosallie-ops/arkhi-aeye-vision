@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Sparkles } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
+import { aiAsk } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/pricing")({ component: Pricing });
 
@@ -12,7 +16,22 @@ const ITEMS = [
 ];
 
 function Pricing() {
+  const ask = useServerFn(aiAsk);
   const total = ITEMS.reduce((s, i) => s + parseInt(i.price.replace(/\D/g, "")), 0);
+  const [q, setQ] = useState("");
+  const [a, setA] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const suggest = async () => {
+    if (!q.trim()) return;
+    setBusy(true); setErr(null); setA(null);
+    const res = await ask({ data: { kind: "pricing", prompt: q } });
+    if (res.ok) setA(res.text);
+    else setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
+    setBusy(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <PageHeader
@@ -51,6 +70,17 @@ function Pricing() {
             ))}
           </tbody>
         </table>
+      </LuxeCard>
+
+      <LuxeCard className="p-6 mt-6">
+        <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2 flex items-center gap-2"><Sparkles className="size-3.5" />Ask A-Eye for purchase suggestions</div>
+        <div className="flex gap-2">
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. Suggest a 4-piece living room set under AED 8,000"
+            className="flex-1 bg-input/40 hairline rounded-lg px-3 py-2.5 text-sm" />
+          <GoldButton onClick={suggest} disabled={busy}>{busy ? "…" : "Suggest"}</GoldButton>
+        </div>
+        {err && <div className="text-sm text-amber-300 mt-3">{err}</div>}
+        {a && <div className="text-sm whitespace-pre-wrap mt-4">{a}</div>}
       </LuxeCard>
     </div>
   );

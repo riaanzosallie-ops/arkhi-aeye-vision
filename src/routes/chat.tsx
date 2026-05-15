@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Send, Sparkles } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
+import { aiAsk } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/chat")({ component: Chat });
 
@@ -15,20 +17,22 @@ const SUGGESTIONS = [
 ];
 
 function Chat() {
+  const ask = useServerFn(aiAsk);
   const [msgs, setMsgs] = useState<Msg[]>([
     { role: "ai", text: "I'm A-Eye — your partner consultant. Ask about ROI, white-label, conversion, or AI integration." },
   ]);
   const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const send = (text?: string) => {
+  const send = async (text?: string) => {
     const t = (text ?? input).trim();
-    if (!t) return;
-    setMsgs((m) => [
-      ...m,
-      { role: "user", text: t },
-      { role: "ai", text: "⚙ Setup required — connect Lovable Cloud and add VITE_OPENAI_API_KEY (or LOVABLE_API_KEY) to enable live A-Eye consulting." },
-    ]);
+    if (!t || busy) return;
+    setMsgs(m => [...m, { role: "user", text: t }]);
     setInput("");
+    setBusy(true);
+    const res = await ask({ data: { kind: "chat", prompt: t } });
+    setMsgs(m => [...m, { role: "ai", text: res.ok ? res.text : (res.error === "AI_KEY_MISSING" ? "⚙ AI setup required." : `AI error: ${res.error}`) }]);
+    setBusy(false);
   };
 
   return (
@@ -43,7 +47,7 @@ function Chat() {
         <div className="flex-1 space-y-3 overflow-y-auto">
           {msgs.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
                 m.role === "user" ? "gradient-gold text-onyx" : "hairline bg-card/60"
               }`}>
                 {m.role === "ai" && <Sparkles className="inline size-3.5 text-gold mr-1.5" />}
@@ -51,6 +55,7 @@ function Chat() {
               </div>
             </div>
           ))}
+          {busy && <div className="text-xs text-muted-foreground">A-Eye is thinking…</div>}
         </div>
 
         <div className="flex flex-wrap gap-2 mt-4">
@@ -66,7 +71,7 @@ function Chat() {
             placeholder="Ask A-Eye anything…"
             className="flex-1 bg-input/40 hairline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-gold"
           />
-          <GoldButton onClick={() => send()}><Send className="size-4" /></GoldButton>
+          <GoldButton onClick={() => send()} disabled={busy}><Send className="size-4" /></GoldButton>
         </div>
       </LuxeCard>
     </div>

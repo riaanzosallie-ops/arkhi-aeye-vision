@@ -1,20 +1,58 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Camera, Upload } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
+import { useAuth } from "@/lib/useAuth";
+import { uploadUserFile } from "@/lib/upload";
+import { supabase } from "@/integrations/supabase/client";
+import { aiAsk } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/snap-compare")({ component: SnapCompare });
 
 function SnapCompare() {
+  const { user } = useAuth();
+  const ask = useServerFn(aiAsk);
   const [item, setItem] = useState<string | null>(null);
   const [room, setRoom] = useState<string | null>(null);
+  const [itemPath, setItemPath] = useState<string | null>(null);
+  const [roomPath, setRoomPath] = useState<string | null>(null);
   const [width, setWidth] = useState("");
   const [depth, setDepth] = useState("");
-  const [analyzed, setAnalyzed] = useState(false);
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiErr, setAiErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const itemRef = useRef<HTMLInputElement>(null);
   const roomRef = useRef<HTMLInputElement>(null);
 
-  const analyze = () => setAnalyzed(true);
+  const pick = async (bucket: "item-photos" | "room-photos", f: File, setUrl: (s: string) => void, setPath: (p: string | null) => void) => {
+    setUrl(URL.createObjectURL(f));
+    setPath(null);
+    if (user) {
+      const up = await uploadUserFile(bucket, f);
+      if (up.ok) setPath(up.path);
+    }
+  };
+
+  const analyze = async () => {
+    setBusy(true);
+    setAiErr(null);
+    setAiText(null);
+    const prompt = `Furniture item ${itemPath ?? "(local)"} vs room ${roomPath ?? "(local)"}. Item dims: width ${width || "?"}cm × depth ${depth || "?"}cm. Score fit & style, give clearance verdict and a 2-line recommendation.`;
+    const res = await ask({ data: { kind: "snap", prompt } });
+    if (res.ok) {
+      setAiText(res.text);
+      if (user) {
+        await supabase.from("scans").insert({
+          user_id: user.id, kind: "snap", image_path: itemPath, secondary_path: roomPath,
+          result: { width, depth, feedback: res.text },
+        });
+      }
+    } else {
+      setAiErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
+    }
+    setBusy(false);
+  };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -27,8 +65,8 @@ function SnapCompare() {
       <div className="grid lg:grid-cols-2 gap-6">
         <Slot label="Furniture / Item" url={item} onPick={() => itemRef.current?.click()} icon={<Camera className="size-8" />} />
         <Slot label="Room Reference" url={room} onPick={() => roomRef.current?.click()} icon={<Upload className="size-8" />} />
-        <input ref={itemRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && setItem(URL.createObjectURL(e.target.files[0]))} />
-        <input ref={roomRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && setRoom(URL.createObjectURL(e.target.files[0]))} />
+        <input ref={itemRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && pick("item-photos", e.target.files[0], setItem, setItemPath)} />
+        <input ref={roomRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && pick("room-photos", e.target.files[0], setRoom, setRoomPath)} />
       </div>
 
       <LuxeCard className="p-6 mt-6">
@@ -36,29 +74,18 @@ function SnapCompare() {
           <Field label="Width (cm)" value={width} onChange={setWidth} placeholder="e.g. 220" />
           <Field label="Depth (cm)" value={depth} onChange={setDepth} placeholder="e.g. 95" />
           <div className="flex items-end">
-            <GoldButton onClick={analyze} className="w-full">Run A-Eye comparison</GoldButton>
+            <GoldButton onClick={analyze} className="w-full" disabled={busy || (!item && !room)}>{busy ? "Analyzing…" : "Run A-Eye comparison"}</GoldButton>
           </div>
         </div>
+        {!user && <div className="text-xs text-muted-foreground mt-3">Sign in to save uploads & results to your cloud.</div>}
       </LuxeCard>
 
-      {analyzed && (
-        <div className="grid md:grid-cols-4 gap-4 mt-6">
-          {[
-            ["Fit Score", "78%"],
-            ["Style Match", "91%"],
-            ["Clearance", "OK"],
-            ["Verdict", "Buy"],
-          ].map(([k, v]) => (
-            <LuxeCard key={k} className="p-5 text-center">
-              <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{k}</div>
-              <div className="font-display text-3xl mt-2 text-gradient-gold">{v}</div>
-            </LuxeCard>
-          ))}
-          <LuxeCard className="p-6 md:col-span-4">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2">A-Eye recommendation</div>
-            <p>Recommended placement: along the longest wall facing the natural light source. Maintain 60cm walking clearance to the coffee table. A warmer-toned alternative could improve color cohesion.</p>
-          </LuxeCard>
-        </div>
+      {(aiText || aiErr) && (
+        <LuxeCard className="p-6 mt-6">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2">A-Eye verdict</div>
+          {aiErr && <div className="text-sm text-amber-300">{aiErr}</div>}
+          {aiText && <div className="text-sm whitespace-pre-wrap">{aiText}</div>}
+        </LuxeCard>
       )}
     </div>
   );
