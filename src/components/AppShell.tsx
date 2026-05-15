@@ -4,8 +4,12 @@ import {
   Building2, TrendingUp, FolderKanban, MessagesSquare, User2, Eye,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { FloatingAEye } from "@/components/FloatingAEye";
+import { useAuth } from "@/lib/useAuth";
 
-export const NAV = [
+export const OWNER_EMAIL = "riaanzosallie@gmail.com";
+
+export const NAV_BASE = [
   { to: "/", label: "Home", icon: Home },
   { to: "/design", label: "Design Space", icon: LayoutGrid },
   { to: "/home-profile", label: "My Home", icon: House },
@@ -14,11 +18,14 @@ export const NAV = [
   { to: "/floor-plan", label: "Floor Plan AI", icon: Map },
   { to: "/pricing", label: "Pricing & Buy", icon: ShoppingBag },
   { to: "/companies", label: "Company Hub", icon: Building2 },
-  { to: "/investor", label: "Investor Mode", icon: TrendingUp },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/chat", label: "A-Eye Chat", icon: MessagesSquare },
   { to: "/profile", label: "Profile", icon: User2 },
 ] as const;
+
+const OWNER_NAV = { to: "/investor", label: "Investor Mode", icon: TrendingUp } as const;
+
+type NavEntry = { to: string; label: string; icon: typeof Home };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
