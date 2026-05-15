@@ -103,7 +103,7 @@ function HomeProfile() {
       if (patch.score !== undefined) dbPatch.score = patch.score;
       if (patch.lastScanned !== undefined) dbPatch.last_scanned = patch.lastScanned;
       if (Object.keys(dbPatch).length) {
-        await supabase.from("rooms").update(dbPatch).eq("id", id);
+        await supabase.from("rooms").update(dbPatch as never).eq("id", id);
       }
     }
   };
