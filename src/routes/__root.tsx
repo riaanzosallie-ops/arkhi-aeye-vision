@@ -77,10 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Design smarter. Compare better. Buy with confidence. AI-powered home intelligence and interior design platform by RIAANZO." },
       { name: "author", content: "RIAANZO" },
       { property: "og:title", content: "ARKHI 2 — A-Eye Space Vision" },
-      { property: "og:description", content: "AI-powered home intelligence by Arkhi A-Eye + Link-Me Ecosystem." },
+      { property: "og:description", content: "Design smarter. Compare better. Buy with confidence. AI-powered home intelligence and interior design platform by RIAANZO." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "ARKHI 2 — A-Eye Space Vision" },
+      { name: "twitter:description", content: "Design smarter. Compare better. Buy with confidence. AI-powered home intelligence and interior design platform by RIAANZO." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/06858507-ef74-4f85-9050-6ddd2cb62d10/id-preview-87ec84a4--013b6720-ceb3-46e2-b7fd-22583d9b11d7.lovable.app-1778855066375.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/06858507-ef74-4f85-9050-6ddd2cb62d10/id-preview-87ec84a4--013b6720-ceb3-46e2-b7fd-22583d9b11d7.lovable.app-1778855066375.png" },
     ],
     links: [
       {
