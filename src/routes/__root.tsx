@@ -4,12 +4,15 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { AppShell } from "@/components/AppShell";
+import { logPageView } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
