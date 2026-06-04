@@ -188,9 +188,9 @@ function Valuation() {
   return (
     <div className="max-w-7xl mx-auto print:max-w-none">
       <PageHeader
-        eyebrow="Insurance Valuation"
-        title={<>AI <span className="text-gradient-gold">Insurance Valuation</span></>}
-        subtitle="Upload one or more images of a room, office or showroom. A-Eye detects every visible item and estimates a realistic replacement value for insurance discussions."
+        eyebrow="Valuation"
+        title={<>AI <span className="text-gradient-gold">Valuation</span></>}
+        subtitle="Upload one or more images of a room, office or showroom. A-Eye detects every visible item and estimates a realistic replacement value."
       />
 
       <div className="grid lg:grid-cols-3 gap-6 print:hidden">
