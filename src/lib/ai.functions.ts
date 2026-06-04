@@ -227,10 +227,10 @@ export const aiValuate = createServerFn({ method: "POST" })
         return { ok: false as const, error: `AI_ERROR_${res.status}: ${txt.slice(0, 200)}` };
       }
       const json = await res.json();
-      const raw = json?.choices?.[0]?.message?.content ?? "";
-      let parsed: { items?: unknown[] } = {};
-      try { parsed = JSON.parse(stripJson(raw)); } catch { return { ok: false as const, error: "AI_PARSE_FAIL", raw }; }
-      const items = Array.isArray(parsed.items) ? parsed.items : [];
+      const raw: string = json?.choices?.[0]?.message?.content ?? "";
+      let parsed: { items?: unknown } = {};
+      try { parsed = JSON.parse(stripJson(raw)) as { items?: unknown }; } catch { return { ok: false as const, error: "AI_PARSE_FAIL", raw: String(raw).slice(0, 1000) }; }
+      const items = (Array.isArray(parsed.items) ? parsed.items : []) as Record<string, unknown>[];
       return { ok: true as const, items, currency };
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
