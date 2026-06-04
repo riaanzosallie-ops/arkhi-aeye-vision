@@ -59,22 +59,27 @@ Next Step
 <one short, encouraging sentence>
 `.trim();
 
-async function callAI(system: string, prompt: string): Promise<string> {
+async function callAI(system: string, prompt: string, opts?: { grounded?: boolean }): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("AI_KEY_MISSING");
+  const body: Record<string, unknown> = {
+    model: MODEL,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: prompt },
+    ],
+  };
+  if (opts?.grounded) {
+    // Lovable AI Gateway forwards Google Search grounding for Gemini models.
+    body.tools = [{ google_search: {} }];
+  }
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: prompt },
-      ],
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const text = await res.text();
