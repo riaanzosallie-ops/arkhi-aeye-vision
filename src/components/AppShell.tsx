@@ -16,7 +16,7 @@ export const NAV_BASE = [
   { to: "/scanner", label: "A-Eye Scanner", icon: ScanLine },
   { to: "/snap-compare", label: "Snap & Compare", icon: Camera },
   { to: "/floor-plan", label: "Floor Plan AI", icon: Map },
-  { to: "/valuation", label: "Insurance Valuation", icon: ShieldCheck },
+  { to: "/valuation", label: "Valuation", icon: ShieldCheck },
   { to: "/pricing", label: "Pricing & Buy", icon: ShoppingBag },
   { to: "/companies", label: "Company Hub", icon: Building2 },
   { to: "/projects", label: "Projects", icon: FolderKanban },

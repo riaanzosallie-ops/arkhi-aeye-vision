@@ -69,7 +69,7 @@ function Valuation() {
     setSavedReportId(null);
     setShareUrl(null);
     if (imgs.length === 0) { setErr("Please upload at least one image."); return; }
-    if (!user) { setErr("Sign in to run insurance valuation."); return; }
+    if (!user) { setErr("Sign in to run valuation."); return; }
     const withPaths = imgs.filter(i => i.path);
     if (withPaths.length === 0) { setErr("Images are still uploading — please wait a moment."); return; }
     setBusy(true);
@@ -188,9 +188,9 @@ function Valuation() {
   return (
     <div className="max-w-7xl mx-auto print:max-w-none">
       <PageHeader
-        eyebrow="Insurance Valuation"
-        title={<>AI <span className="text-gradient-gold">Insurance Valuation</span></>}
-        subtitle="Upload one or more images of a room, office or showroom. A-Eye detects every visible item and estimates a realistic replacement value for insurance discussions."
+        eyebrow="Valuation"
+        title={<>AI <span className="text-gradient-gold">Valuation</span></>}
+        subtitle="Upload one or more images of a room, office or showroom. A-Eye detects every visible item and estimates a realistic replacement value."
       />
 
       <div className="grid lg:grid-cols-3 gap-6 print:hidden">
@@ -233,7 +233,7 @@ function Valuation() {
             </select>
           </div>
           <GoldButton onClick={analyze} disabled={busy || imgs.length === 0} className="w-full">
-            {busy ? "Analyzing space…" : "Analyze Space for Insurance Valuation"}
+            {busy ? "Analyzing space…" : "Analyze Space for Valuation"}
           </GoldButton>
           {!user && <div className="text-xs text-muted-foreground">Sign in on the Profile tab to run live valuations.</div>}
           {err && <div className="text-xs text-amber-300">{err}</div>}
@@ -328,7 +328,7 @@ function Valuation() {
 
           <LuxeCard className="mt-4 p-4 text-xs text-muted-foreground flex gap-2">
             <ShieldCheck className="size-4 text-gold shrink-0 mt-0.5" />
-            Arkhi AI provides estimated replacement valuations based on visual analysis and comparable market items. This is not a certified appraisal. Final insurance acceptance may require review by the insurer or a licensed valuation professional.
+            Arkhi AI provides estimated replacement valuations based on visual analysis and comparable market items. This is not a certified appraisal. Final acceptance may require review by a licensed valuation professional.
           </LuxeCard>
         </>
       )}
