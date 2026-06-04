@@ -173,9 +173,9 @@ export const aiStatus = createServerFn({ method: "GET" }).handler(async () => {
   return { configured: Boolean(process.env.LOVABLE_API_KEY) };
 });
 
-// ─── AI Insurance Valuation ────────────────────────────────────────────
+// ─── AI Valuation ──────────────────────────────────────────────────────
 const VALUATION_SYSTEM = `${ARKHI_CORE}
-You are A-Eye Insurance Valuator. From the provided room/space images, detect every visible valuable item (furniture, appliances, electronics, decor, lighting, artwork, rugs, accessories). Group obvious duplicates with quantity. For each item, ALWAYS return a realistic replacement-cost estimate in the requested currency. Never leave a value blank. If you cannot identify the exact item, use the closest comparable replacement and set comparable_replacement_used=true, with a note. Be insurance-practical, not speculative on brand/model. Output ONLY valid JSON matching this shape (no prose, no markdown fences):
+You are A-Eye Valuator. From the provided room/space images, detect every visible valuable item (furniture, appliances, electronics, decor, lighting, artwork, rugs, accessories). Group obvious duplicates with quantity. For each item, ALWAYS return a realistic replacement-cost estimate in the requested currency. Never leave a value blank. If you cannot identify the exact item, use the closest comparable replacement and set comparable_replacement_used=true, with a note. Be practical, not speculative on brand/model. Output ONLY valid JSON matching this shape (no prose, no markdown fences):
 
 {"items":[{"item_name":"3-Seater Velvet Sofa","category":"Furniture","quantity":1,"description":"Mid-century styled velvet sofa, dark teal","estimated_low_value":2800,"estimated_mid_value":3500,"estimated_high_value":4500,"condition_assumption":"Good","confidence_score":82,"image_reference":"image_1","comparable_replacement_used":false,"replacement_notes":"","requires_user_review":false}]}
 
