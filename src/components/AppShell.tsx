@@ -1,7 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   Home, LayoutGrid, House, ScanLine, Camera, Map, ShoppingBag,
-  Building2, TrendingUp, FolderKanban, MessagesSquare, User2, Eye,
+  Building2, TrendingUp, FolderKanban, MessagesSquare, User2, Eye, ShieldCheck,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { FloatingAEye } from "@/components/FloatingAEye";
@@ -16,6 +16,7 @@ export const NAV_BASE = [
   { to: "/scanner", label: "A-Eye Scanner", icon: ScanLine },
   { to: "/snap-compare", label: "Snap & Compare", icon: Camera },
   { to: "/floor-plan", label: "Floor Plan AI", icon: Map },
+  { to: "/valuation", label: "Insurance Valuation", icon: ShieldCheck },
   { to: "/pricing", label: "Pricing & Buy", icon: ShoppingBag },
   { to: "/companies", label: "Company Hub", icon: Building2 },
   { to: "/projects", label: "Projects", icon: FolderKanban },
