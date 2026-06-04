@@ -45,9 +45,9 @@ function HomePage() {
             </div>
 
             <div className="grid grid-cols-3 gap-3 mt-12 max-w-lg">
-              <StatTile label="AI Modules" value="9" />
-              <StatTile label="Partners" value="5" />
-              <StatTile label="Room Types" value="10" />
+              <StatTile label="AI Modules" value={String(FEATURES.length)} />
+              <StatTile label="Live AI" value="On" />
+              <StatTile label="Market" value="UAE" />
             </div>
           </div>
 

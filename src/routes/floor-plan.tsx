@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { trackAi } from "@/lib/analytics";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Upload, Map } from "lucide-react";
@@ -34,7 +35,7 @@ function FloorPlan() {
   const analyze = async () => {
     setBusy(true); setAiErr(null); setAiText(null);
     const prompt = `${homeProfileContext()}\n\nFloor plan ${path ?? "(local only)"}. Dimensions WxDxH: ${dims.w || "?"}×${dims.d || "?"}×${dims.h || "?"}m, doors: ${dims.doors || "?"}.\nDeliver zoning, recommended partner products per zone (Pan Emirates / Danube Home / IKEA UAE / Home Centre), full-room shopping list, estimated AED redesign budget range, and customer next step.`;
-    const res = await ask({ data: { kind: "floorplan", prompt } });
+    const res = await trackAi("floorplan", () => ask({ data: { kind: "floorplan", prompt } }));
     if (res.ok) {
       setAiText(res.text);
       if (user) {

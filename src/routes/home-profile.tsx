@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { trackAi } from "@/lib/analytics";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -318,7 +319,7 @@ function RoomDetail({ room, cloud, onBack, onUpdate, onDelete }: {
     setAnalyzing(true); setAnalysisErr(null);
     const dims = (width && length) ? ` Dimensions: ${width} × ${length} m.` : "";
     const prompt = `${homeProfileContext()}\n\nRoom: ${room.name} (${room.type}). ${room.images?.length} photo(s) uploaded.${dims} Notes: ${notes || "none"}.\nGive a warm, emotionally generous A-Eye reading of this room. Compliment what works, gently reveal opportunities, then suggest a direction.`;
-    const res = await ask({ data: { kind: "scanner", prompt } });
+    const res = await trackAi("scanner", () => ask({ data: { kind: "scanner", prompt } }));
     if (res.ok) {
       const p = parseAnalysis(res.text);
       await onUpdate({
@@ -338,7 +339,7 @@ function RoomDetail({ room, cloud, onBack, onUpdate, onDelete }: {
   const suggestLooks = async () => {
     setLooksBusy(true); setLooksErr(null); setLooks(null);
     const prompt = `${homeProfileContext()}\n\nRoom context: ${room.name} (${room.type}). ${parsed?.styleCategory ? `Detected style: ${parsed.styleCategory}.` : ""} ${parsed?.mood ? `Mood: ${parsed.mood}.` : ""} ${notes || ""}\nReturn 4 suggested look concepts as JSON.`;
-    const res = await ask({ data: { kind: "looks", prompt } });
+    const res = await trackAi("looks", () => ask({ data: { kind: "looks", prompt } }));
     if (!res.ok) { setLooksErr(res.error === "AI_KEY_MISSING" ? "AI setup required." : `AI error: ${res.error}`); setLooksBusy(false); return; }
     try {
       const cleaned = res.text.replace(/```json|```/g, "").trim();
@@ -360,7 +361,7 @@ function RoomDetail({ room, cloud, onBack, onUpdate, onDelete }: {
     setEmptyBusy(true); setEmptyOut(null); setEmptyErr(null);
     const dims = (width && length) ? `${width} × ${length} m` : "unknown dimensions";
     const prompt = `${homeProfileContext()}\n\nEmpty room: ${room.name} (${room.type}), ${dims}. Notes: ${notes || "none"}.\nDesign a complete ${emptyBudget.toLowerCase()} tier furnishing for this empty space.`;
-    const res = await ask({ data: { kind: "empty_room", prompt } });
+    const res = await trackAi("empty_room", () => ask({ data: { kind: "empty_room", prompt } }));
     if (res.ok) setEmptyOut(res.text);
     else setEmptyErr(res.error === "AI_KEY_MISSING" ? "AI setup required." : `AI error: ${res.error}`);
     setEmptyBusy(false);

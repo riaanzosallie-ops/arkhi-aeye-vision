@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader, LuxeCard, GoldButton } from "@/components/ui-kit";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/companies")({ component: Companies });
 
@@ -14,20 +15,42 @@ const PARTNERS = [
 
 function Companies() {
   const [active, setActive] = useState(PARTNERS[0].name);
+  const [stats, setStats] = useState<{ scans: number | null; projects: number | null; rooms: number | null }>({
+    scans: null, projects: null, rooms: null,
+  });
+
+  useEffect(() => {
+    (async () => {
+      const [scans, projects, rooms] = await Promise.all([
+        supabase.from("scans").select("*", { count: "exact", head: true }),
+        supabase.from("projects").select("*", { count: "exact", head: true }),
+        supabase.from("rooms").select("*", { count: "exact", head: true }),
+      ]);
+      setStats({
+        scans: scans.count ?? 0,
+        projects: projects.count ?? 0,
+        rooms: rooms.count ?? 0,
+      });
+    })();
+  }, []);
+
+  const fmt = (n: number | null) => n === null ? "…" : n.toLocaleString();
+
   return (
     <div className="max-w-7xl mx-auto">
       <PageHeader
         eyebrow="Retailer Platform"
         title={<>Company <span className="text-gradient-gold">Hub</span></>}
-        subtitle="White-label AI conversion engine for furniture retailers — room leads, catalogue recommendations, basket growth, and branch ROI."
+        subtitle="White-label AI conversion engine for furniture retailers — room leads, catalogue recommendations, basket growth, and branch ROI. Partner cards below are demo shells until each retailer is onboarded with live data."
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {PARTNERS.map((p) => (
           <button key={p.name} onClick={() => setActive(p.name)} className="text-left">
             <LuxeCard className={`p-6 h-full transition ${active === p.name ? "border-gold" : "hover:border-gold/40"}`}>
-              <div className={`aspect-[3/2] rounded-lg bg-gradient-to-br ${p.color} mb-4 grid place-items-center font-display text-2xl`}>
+              <div className={`aspect-[3/2] rounded-lg bg-gradient-to-br ${p.color} mb-4 grid place-items-center font-display text-2xl relative`}>
                 {p.name}
+                <span className="absolute top-2 right-2 text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full hairline bg-onyx/60 text-muted-foreground">Demo Partner</span>
               </div>
               <div className="text-xs text-muted-foreground">{p.tag}</div>
             </LuxeCard>
@@ -39,14 +62,20 @@ function Companies() {
         <div className="flex items-center gap-3 mb-4">
           <div className="size-10 rounded-lg gradient-gold grid place-items-center text-onyx font-bold">{active.slice(0, 1)}</div>
           <div>
-            <div className="font-display text-xl">{active} workspace</div>
+            <div className="font-display text-xl">{active} workspace <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground ml-2">Demo</span></div>
             <div className="text-xs text-muted-foreground">Branded AI planner · Catalogue sync · Lead capture · Analytics</div>
           </div>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
           {[
-            ["Scans generated", "1,284"], ["Leads captured", "237"], ["Avg basket value", "AED 6,420"], ["Conversion stage", "Mid-funnel"],
-            ["Top category", "Sectionals"], ["Catalogue items", "1,840"], ["Branches", "12"], ["Partner ROI est.", "4.8×"],
+            ["Platform scans (live)", fmt(stats.scans)],
+            ["Saved rooms (live)", fmt(stats.rooms)],
+            ["Active projects (live)", fmt(stats.projects)],
+            ["Partner ROI", "—"],
+            ["Avg basket value", "—"],
+            ["Catalogue items", "—"],
+            ["Branches onboarded", "—"],
+            ["Top category", "—"],
           ].map(([k, v]) => (
             <div key={k} className="hairline rounded-lg p-4">
               <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{k}</div>

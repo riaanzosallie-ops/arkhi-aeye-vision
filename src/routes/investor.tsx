@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Lock, Sparkles, Eye, EyeOff, LogOut } from "lucide-react";
-import { PageHeader, LuxeCard, GoldButton, GhostButton, StatTile } from "@/components/ui-kit";
+import { PageHeader, LuxeCard, GoldButton, GhostButton } from "@/components/ui-kit";
 import { useAuth } from "@/lib/useAuth";
 import { aiAsk } from "@/lib/ai.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { OwnerAnalytics } from "@/components/OwnerAnalytics";
+import { trackAi } from "@/lib/analytics";
 
 export const Route = createFileRoute("/investor")({ component: Investor });
 
@@ -121,9 +123,9 @@ function Investor() {
   const askInvestor = async () => {
     if (!q.trim()) return;
     setBusy(true); setErr(null); setA(null);
-    const res = await ask({ data: { kind: "investor", prompt: q } });
+    const res = await trackAi("investor", () => ask({ data: { kind: "investor", prompt: q } }));
     if (res.ok) setA(res.text);
-    else setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
+    else setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : "A-Eye is unavailable right now. Please try again in a moment.");
     setBusy(false);
   };
 
@@ -136,12 +138,8 @@ function Investor() {
         actions={<GhostButton onClick={() => supabase.auth.signOut()}><LogOut className="inline size-4 mr-1" />Sign out</GhostButton>}
       />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatTile label="ARR Target Y1" value="AED 4.2M" />
-        <StatTile label="Active partners" value="5" />
-        <StatTile label="LTV : CAC" value="6.4×" />
-        <StatTile label="Avg. retention" value="22mo" />
-      </div>
+      <OwnerAnalytics />
+
 
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {[
@@ -201,11 +199,11 @@ function Investor() {
 }
 
 function RoiCalculator() {
-  const [scans, setScans] = useState(2000);
-  const [conv, setConv] = useState(8); // %
-  const [aov, setAov] = useState(4500); // AED
-  const [comm, setComm] = useState(6); // %
-  const [sub, setSub] = useState(7800); // AED/mo
+  const [scans, setScans] = useState(0);
+  const [conv, setConv] = useState(0); // %
+  const [aov, setAov] = useState(0); // AED
+  const [comm, setComm] = useState(0); // %
+  const [sub, setSub] = useState(0); // AED/mo
 
   const sales = scans * (conv / 100);
   const partnerSales = sales * aov;
