@@ -184,7 +184,7 @@ Rules:
 - confidence_score 0-100 integer.
 - image_reference uses "image_1", "image_2", ... in the order provided.
 - If item is unknown/discontinued, still provide a comparable replacement estimate and set comparable_replacement_used=true with replacement_notes "Exact item unavailable. Estimated using closest comparable replacement." Optionally set requires_user_review=true.
-- If item has low resale value, still estimate; set replacement_notes "Low insurance value — included for record completeness."
+- If item has low resale value, still estimate; set replacement_notes "Low replacement value — included for record completeness."
 - Never return an empty items array if any visible items exist.`;
 
 function stripJson(s: string): string {
