@@ -328,7 +328,7 @@ function Valuation() {
 
           <LuxeCard className="mt-4 p-4 text-xs text-muted-foreground flex gap-2">
             <ShieldCheck className="size-4 text-gold shrink-0 mt-0.5" />
-            Arkhi AI provides estimated replacement valuations based on visual analysis and comparable market items. This is not a certified appraisal. Final insurance acceptance may require review by the insurer or a licensed valuation professional.
+            Arkhi AI provides estimated replacement valuations based on visual analysis and comparable market items. This is not a certified appraisal. Final acceptance may require review by a licensed valuation professional.
           </LuxeCard>
         </>
       )}
