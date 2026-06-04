@@ -233,7 +233,7 @@ function Valuation() {
             </select>
           </div>
           <GoldButton onClick={analyze} disabled={busy || imgs.length === 0} className="w-full">
-            {busy ? "Analyzing space…" : "Analyze Space for Insurance Valuation"}
+            {busy ? "Analyzing space…" : "Analyze Space for Valuation"}
           </GoldButton>
           {!user && <div className="text-xs text-muted-foreground">Sign in on the Profile tab to run live valuations.</div>}
           {err && <div className="text-xs text-amber-300">{err}</div>}
