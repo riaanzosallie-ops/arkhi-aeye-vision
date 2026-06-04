@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Lock, Sparkles, Eye, EyeOff, LogOut } from "lucide-react";
-import { PageHeader, LuxeCard, GoldButton, GhostButton, StatTile } from "@/components/ui-kit";
+import { PageHeader, LuxeCard, GoldButton, GhostButton } from "@/components/ui-kit";
 import { useAuth } from "@/lib/useAuth";
 import { aiAsk } from "@/lib/ai.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { OwnerAnalytics } from "@/components/OwnerAnalytics";
+import { trackAi } from "@/lib/analytics";
 
 export const Route = createFileRoute("/investor")({ component: Investor });
 
