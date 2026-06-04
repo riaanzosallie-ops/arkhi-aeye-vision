@@ -69,7 +69,7 @@ function Valuation() {
     setSavedReportId(null);
     setShareUrl(null);
     if (imgs.length === 0) { setErr("Please upload at least one image."); return; }
-    if (!user) { setErr("Sign in to run insurance valuation."); return; }
+    if (!user) { setErr("Sign in to run valuation."); return; }
     const withPaths = imgs.filter(i => i.path);
     if (withPaths.length === 0) { setErr("Images are still uploading — please wait a moment."); return; }
     setBusy(true);
