@@ -14,6 +14,166 @@ export type Database = {
   }
   public: {
     Tables: {
+      arkhi_valuation_exports: {
+        Row: {
+          created_at: string
+          export_type: string
+          export_url: string | null
+          id: string
+          report_id: string
+          share_token: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          export_type: string
+          export_url?: string | null
+          id?: string
+          report_id: string
+          share_token?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          export_type?: string
+          export_url?: string | null
+          id?: string
+          report_id?: string
+          share_token?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arkhi_valuation_exports_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "arkhi_valuation_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arkhi_valuation_items: {
+        Row: {
+          category: string | null
+          comparable_replacement_used: boolean
+          condition_assumption: string | null
+          confidence_score: number
+          created_at: string
+          currency: string
+          description: string | null
+          estimated_high_value: number
+          estimated_low_value: number
+          estimated_mid_value: number
+          id: string
+          image_reference: string | null
+          item_name: string
+          quantity: number
+          replacement_notes: string | null
+          report_id: string
+          requires_user_review: boolean
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          comparable_replacement_used?: boolean
+          condition_assumption?: string | null
+          confidence_score?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          estimated_high_value?: number
+          estimated_low_value?: number
+          estimated_mid_value?: number
+          id?: string
+          image_reference?: string | null
+          item_name: string
+          quantity?: number
+          replacement_notes?: string | null
+          report_id: string
+          requires_user_review?: boolean
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          comparable_replacement_used?: boolean
+          condition_assumption?: string | null
+          confidence_score?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          estimated_high_value?: number
+          estimated_low_value?: number
+          estimated_mid_value?: number
+          id?: string
+          image_reference?: string | null
+          item_name?: string
+          quantity?: number
+          replacement_notes?: string | null
+          report_id?: string
+          requires_user_review?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arkhi_valuation_items_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "arkhi_valuation_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arkhi_valuation_reports: {
+        Row: {
+          confidence_summary: Json | null
+          created_at: string
+          currency: string
+          detected_item_count: number
+          id: string
+          image_paths: Json
+          project_id: string | null
+          report_status: string
+          room_name: string
+          total_high_estimate: number
+          total_low_estimate: number
+          total_mid_estimate: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_summary?: Json | null
+          created_at?: string
+          currency?: string
+          detected_item_count?: number
+          id?: string
+          image_paths?: Json
+          project_id?: string | null
+          report_status?: string
+          room_name?: string
+          total_high_estimate?: number
+          total_low_estimate?: number
+          total_mid_estimate?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_summary?: Json | null
+          created_at?: string
+          currency?: string
+          detected_item_count?: number
+          id?: string
+          image_paths?: Json
+          project_id?: string | null
+          report_status?: string
+          room_name?: string
+          total_high_estimate?: number
+          total_low_estimate?: number
+          total_mid_estimate?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

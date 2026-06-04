@@ -172,3 +172,74 @@ You are A-Eye Investor Analyst (owner-only context). Frame Arkhi 2 as confidence
 export const aiStatus = createServerFn({ method: "GET" }).handler(async () => {
   return { configured: Boolean(process.env.LOVABLE_API_KEY) };
 });
+
+// ─── AI Insurance Valuation ────────────────────────────────────────────
+const VALUATION_SYSTEM = `${ARKHI_CORE}
+You are A-Eye Insurance Valuator. From the provided room/space images, detect every visible valuable item (furniture, appliances, electronics, decor, lighting, artwork, rugs, accessories). Group obvious duplicates with quantity. For each item, ALWAYS return a realistic replacement-cost estimate in the requested currency. Never leave a value blank. If you cannot identify the exact item, use the closest comparable replacement and set comparable_replacement_used=true, with a note. Be insurance-practical, not speculative on brand/model. Output ONLY valid JSON matching this shape (no prose, no markdown fences):
+
+{"items":[{"item_name":"3-Seater Velvet Sofa","category":"Furniture","quantity":1,"description":"Mid-century styled velvet sofa, dark teal","estimated_low_value":2800,"estimated_mid_value":3500,"estimated_high_value":4500,"condition_assumption":"Good","confidence_score":82,"image_reference":"image_1","comparable_replacement_used":false,"replacement_notes":"","requires_user_review":false}]}
+
+Rules:
+- estimated_low/mid/high MUST be positive numbers in the requested currency.
+- confidence_score 0-100 integer.
+- image_reference uses "image_1", "image_2", ... in the order provided.
+- If item is unknown/discontinued, still provide a comparable replacement estimate and set comparable_replacement_used=true with replacement_notes "Exact item unavailable. Estimated using closest comparable replacement." Optionally set requires_user_review=true.
+- If item has low resale value, still estimate; set replacement_notes "Low insurance value — included for record completeness."
+- Never return an empty items array if any visible items exist.`;
+
+function stripJson(s: string): string {
+  const m = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  return (m ? m[1] : s).trim();
+}
+
+export const aiValuate = createServerFn({ method: "POST" })
+  .inputValidator((d: { imageUrls: string[]; currency?: string; roomName?: string }) =>
+    z.object({
+      imageUrls: z.array(z.string().url()).min(1).max(8),
+      currency: z.string().min(2).max(6).optional(),
+      roomName: z.string().max(120).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) return { ok: false as const, error: "AI_KEY_MISSING" };
+    const currency = data.currency ?? "AED";
+    const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+      { type: "text", text: `Currency: ${currency}. Space: ${data.roomName ?? "Untitled Space"}. Analyze ${data.imageUrls.length} image(s) and return the JSON described.` },
+      ...data.imageUrls.map(url => ({ type: "image_url" as const, image_url: { url } })),
+    ];
+    try {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: "system", content: VALUATION_SYSTEM },
+            { role: "user", content: userContent },
+          ],
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        if (res.status === 429) return { ok: false as const, error: "AI_RATE_LIMIT" };
+        if (res.status === 402) return { ok: false as const, error: "AI_CREDITS" };
+        return { ok: false as const, error: `AI_ERROR_${res.status}: ${txt.slice(0, 200)}` };
+      }
+      const json = await res.json();
+      const raw: string = json?.choices?.[0]?.message?.content ?? "";
+      type ValuationItem = {
+        item_name: string; category?: string; quantity?: number; description?: string;
+        estimated_low_value?: number; estimated_mid_value?: number; estimated_high_value?: number;
+        condition_assumption?: string; confidence_score?: number; image_reference?: string;
+        comparable_replacement_used?: boolean; replacement_notes?: string; requires_user_review?: boolean;
+      };
+      let parsed: { items?: ValuationItem[] } = {};
+      try { parsed = JSON.parse(stripJson(raw)) as { items?: ValuationItem[] }; }
+      catch { return { ok: false as const, error: "AI_PARSE_FAIL", raw: String(raw).slice(0, 1000) }; }
+      const items: ValuationItem[] = Array.isArray(parsed.items) ? parsed.items : [];
+      return { ok: true as const, items, currency };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
+    }
+  });
