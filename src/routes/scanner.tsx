@@ -53,7 +53,7 @@ function ScannerPage() {
     setAiErr(null);
     setAiText(null);
     const prompt = `${homeProfileContext()}\n\nRoom photo uploaded${storagePath ? ` (${storagePath})` : ""}. User notes: ${notes || "none"}.\nReturn confidence-to-purchase scan with recommended partner product, upsell, and estimated full-room basket value (AED).`;
-    const res = await ask({ data: { kind: "scanner", prompt } });
+    const res = await trackAi("scanner", () => ask({ data: { kind: "scanner", prompt } }));
     if (res.ok) {
       setAiText(res.text);
       if (user && storagePath) {
