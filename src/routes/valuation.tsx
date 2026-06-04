@@ -80,7 +80,7 @@ function Valuation() {
       if (u) urls.push(u);
     }
     if (urls.length === 0) { setBusy(false); setErr("Could not prepare images for analysis."); return; }
-    const res = await valuate({ data: { imageUrls: urls, currency, roomName: roomName || "Untitled Space" } });
+    const res = await trackAi("valuation", () => valuate({ data: { imageUrls: urls, currency, roomName: roomName || "Untitled Space" } }));
     if (!res.ok) {
       setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : res.error === "AI_CREDITS" ? "AI credits exhausted — top up workspace credits." : `Analysis failed: ${res.error}`);
       setBusy(false);
