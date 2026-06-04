@@ -123,9 +123,9 @@ function Investor() {
   const askInvestor = async () => {
     if (!q.trim()) return;
     setBusy(true); setErr(null); setA(null);
-    const res = await ask({ data: { kind: "investor", prompt: q } });
+    const res = await trackAi("investor", () => ask({ data: { kind: "investor", prompt: q } }));
     if (res.ok) setA(res.text);
-    else setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
+    else setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : "A-Eye is unavailable right now. Please try again in a moment.");
     setBusy(false);
   };
 
