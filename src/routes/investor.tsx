@@ -199,11 +199,11 @@ function Investor() {
 }
 
 function RoiCalculator() {
-  const [scans, setScans] = useState(2000);
-  const [conv, setConv] = useState(8); // %
-  const [aov, setAov] = useState(4500); // AED
-  const [comm, setComm] = useState(6); // %
-  const [sub, setSub] = useState(7800); // AED/mo
+  const [scans, setScans] = useState(0);
+  const [conv, setConv] = useState(0); // %
+  const [aov, setAov] = useState(0); // AED
+  const [comm, setComm] = useState(0); // %
+  const [sub, setSub] = useState(0); // AED/mo
 
   const sales = scans * (conv / 100);
   const partnerSales = sales * aov;
