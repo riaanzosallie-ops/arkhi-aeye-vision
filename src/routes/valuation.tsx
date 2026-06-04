@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { trackAi } from "@/lib/analytics";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Upload, Camera, FileDown, ShieldCheck, Trash2, Plus, Loader2, Save, Share2 } from "lucide-react";
