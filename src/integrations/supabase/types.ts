@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      arkhi_ai_usage: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          id: string
+          kind: string | null
+          success: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          kind?: string | null
+          success?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          id?: string
+          kind?: string | null
+          success?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      arkhi_business_metrics: {
+        Row: {
+          id: string
+          metric_key: string
+          metric_label: string | null
+          metric_unit: string | null
+          metric_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          metric_key: string
+          metric_label?: string | null
+          metric_unit?: string | null
+          metric_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          metric_key?: string
+          metric_label?: string | null
+          metric_unit?: string | null
+          metric_value?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      arkhi_page_views: {
+        Row: {
+          created_at: string
+          device_type: string | null
+          id: string
+          page: string | null
+          referrer: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       arkhi_valuation_exports: {
         Row: {
           created_at: string
