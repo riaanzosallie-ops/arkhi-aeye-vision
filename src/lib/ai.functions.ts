@@ -228,9 +228,16 @@ export const aiValuate = createServerFn({ method: "POST" })
       }
       const json = await res.json();
       const raw: string = json?.choices?.[0]?.message?.content ?? "";
-      let parsed: { items?: unknown } = {};
-      try { parsed = JSON.parse(stripJson(raw)) as { items?: unknown }; } catch { return { ok: false as const, error: "AI_PARSE_FAIL", raw: String(raw).slice(0, 1000) }; }
-      const items = (Array.isArray(parsed.items) ? parsed.items : []) as Record<string, unknown>[];
+      type ValuationItem = {
+        item_name: string; category?: string; quantity?: number; description?: string;
+        estimated_low_value?: number; estimated_mid_value?: number; estimated_high_value?: number;
+        condition_assumption?: string; confidence_score?: number; image_reference?: string;
+        comparable_replacement_used?: boolean; replacement_notes?: string; requires_user_review?: boolean;
+      };
+      let parsed: { items?: ValuationItem[] } = {};
+      try { parsed = JSON.parse(stripJson(raw)) as { items?: ValuationItem[] }; }
+      catch { return { ok: false as const, error: "AI_PARSE_FAIL", raw: String(raw).slice(0, 1000) }; }
+      const items: ValuationItem[] = Array.isArray(parsed.items) ? parsed.items : [];
       return { ok: true as const, items, currency };
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
