@@ -138,12 +138,8 @@ function Investor() {
         actions={<GhostButton onClick={() => supabase.auth.signOut()}><LogOut className="inline size-4 mr-1" />Sign out</GhostButton>}
       />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatTile label="ARR Target Y1" value="AED 4.2M" />
-        <StatTile label="Active partners" value="5" />
-        <StatTile label="LTV : CAC" value="6.4×" />
-        <StatTile label="Avg. retention" value="22mo" />
-      </div>
+      <OwnerAnalytics />
+
 
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {[
