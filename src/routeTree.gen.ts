@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ValuationRouteImport } from './routes/valuation'
 import { Route as SnapCompareRouteImport } from './routes/snap-compare'
 import { Route as ScannerRouteImport } from './routes/scanner'
 import { Route as ProjectsRouteImport } from './routes/projects'
@@ -22,6 +23,11 @@ import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ValuationRoute = ValuationRouteImport.update({
+  id: '/valuation',
+  path: '/valuation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SnapCompareRoute = SnapCompareRouteImport.update({
   id: '/snap-compare',
   path: '/snap-compare',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof ProjectsRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
+  '/valuation': typeof ValuationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
+  '/valuation': typeof ValuationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/projects': typeof ProjectsRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
+  '/valuation': typeof ValuationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/scanner'
     | '/snap-compare'
+    | '/valuation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/scanner'
     | '/snap-compare'
+    | '/valuation'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/scanner'
     | '/snap-compare'
+    | '/valuation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,10 +196,18 @@ export interface RootRouteChildren {
   ProjectsRoute: typeof ProjectsRoute
   ScannerRoute: typeof ScannerRoute
   SnapCompareRoute: typeof SnapCompareRoute
+  ValuationRoute: typeof ValuationRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/valuation': {
+      id: '/valuation'
+      path: '/valuation'
+      fullPath: '/valuation'
+      preLoaderRoute: typeof ValuationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/snap-compare': {
       id: '/snap-compare'
       path: '/snap-compare'
@@ -288,7 +308,18 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsRoute: ProjectsRoute,
   ScannerRoute: ScannerRoute,
   SnapCompareRoute: SnapCompareRoute,
+  ValuationRoute: ValuationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
