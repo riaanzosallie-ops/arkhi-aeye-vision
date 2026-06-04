@@ -98,7 +98,7 @@ export const aiAsk = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const systems: Record<string, string> = {
       chat: `${ARKHI_CORE}
-You are A-Eye — a luxury design companion. The user may ask anything about their saved rooms, redesigning, style, budgets, or the Arkhi journey. Be warm, helpful, and inspiring. Use any My Home Profile context provided. Keep answers tight and beautifully written. Mention partner stores only when genuinely useful.`,
+You are A-Eye — a luxury design companion. The user may ask anything about their saved rooms, redesigning, style, budgets, or the Arkhi journey. Be warm, helpful, and inspiring. Use any My Home Profile context provided. Use Google Search grounding when the user asks about real UAE retail prices or current products. Keep answers tight and beautifully written. Mention partner stores only when genuinely useful.`,
 
       scanner: `${ARKHI_CORE}
 You are A-Eye Room Analyst. The customer just shared a room with you. First understand the space emotionally (mood, light, warmth, balance, comfort, clutter, luxury feel, functionality). Compliment what already works. Then reveal opportunities gently. Then suggest a design direction and budget guidance. Only mention partner stores as style inspiration. Never sales-first.
@@ -159,18 +159,59 @@ Next Step: <one sentence>`,
 You are A-Eye Spatial Planner. From floor plan + dimensions, deliver: zoning, key placements, recommended furniture categories per zone, full-room shopping list (categories), estimated AED redesign budget range, and a warm next step. Use "Estimated price range" labels — no live SKUs.`,
 
       pricing: `${ARKHI_CORE}
-You are A-Eye Shopping Assistant for UAE customers. Build full-room shopping plans across Pan Emirates, Danube Home, IKEA UAE, Home Centre, Amazon UAE. Each item: category, retailer, estimated price range (AED), fit %, style %. End with: total estimated basket and a warm note. Keep it inspirational, not pushy.`,
+You are A-Eye Shopping Assistant for UAE customers. Use Google Search grounding to reference current Pan Emirates, Danube Home, IKEA UAE, Home Centre and Amazon UAE listings. Each item: category, retailer, estimated AED price range from real current UAE listings, fit %, style %, and a one-line note citing where the price reference came from. End with: total estimated basket and a warm note. Keep it inspirational, not pushy.`,
 
       investor: `${ARKHI_CORE}
 You are A-Eye Investor Analyst (owner-only context). Frame Arkhi 2 as confidence-to-purchase tech for furniture retailers. Revenue streams: monthly SaaS, white-label licensing, product sales commission, lead generation, AI design packages, retailer analytics. Answer with concrete numbers (AED, %, multiples), tying to scans → leads → conversion → basket → ROI multiple. UAE first, then GCC.`,
     };
     const system = systems[data.kind] ?? systems.chat;
+    const grounded = data.kind === "pricing" || data.kind === "chat";
     try {
-      const text = await callAI(system, data.prompt);
+      const text = await callAI(system, data.prompt, { grounded });
       return { ok: true as const, text };
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       return { ok: false as const, error: msg };
+    }
+  });
+
+/** Returns 4 contextual chat suggestion prompts as JSON array of strings. */
+export const aiSuggestions = createServerFn({ method: "POST" })
+  .inputValidator((d: { context?: string }) =>
+    z.object({ context: z.string().max(4000).optional() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const sys = `${ARKHI_CORE}
+Generate 4 short, warm, contextual starter questions a user could ask A-Eye right now. Return ONLY a JSON array of 4 strings, no prose, no fences. Each string under 70 chars.`;
+    try {
+      const text = await callAI(sys, `Context:\n${data.context ?? "First-time visitor, no saved rooms yet."}`);
+      const m = text.match(/\[[\s\S]*\]/);
+      const arr = m ? (JSON.parse(m[0]) as unknown) : [];
+      const list = Array.isArray(arr) ? arr.filter((x): x is string => typeof x === "string").slice(0, 4) : [];
+      return { ok: true as const, suggestions: list };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
+    }
+  });
+
+/** Live-grounded UAE product recommendations. Returns structured items. */
+export const aiPricingRecs = createServerFn({ method: "POST" })
+  .inputValidator((d: { roomContext: string; budget?: string }) =>
+    z.object({ roomContext: z.string().min(1).max(4000), budget: z.string().max(80).optional() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const sys = `${ARKHI_CORE}
+You are A-Eye Shopping Assistant. Using Google Search grounding for current UAE retailer listings (Pan Emirates, Danube Home, IKEA UAE, Home Centre, Amazon UAE), recommend a full-room shopping list tailored to the provided room context${data.budget ? ` and budget ${data.budget}` : ""}. Return ONLY valid JSON (no prose, no fences) in this exact shape:
+{"items":[{"name":"...","category":"sofa|table|lighting|rug|decor|...","retailer":"Pan Emirates|Danube Home|IKEA UAE|Home Centre|Amazon UAE","price_low":1200,"price_high":1800,"currency":"AED","fit":88,"style":85,"source_note":"Based on current Pan Emirates UAE listing"}]}
+Rules: 5–8 items. price_low/high are positive numbers in AED based on real current UAE listings. fit/style are 0–100. Always include source_note citing where the price reference came from.`;
+    try {
+      const text = await callAI(sys, data.roomContext, { grounded: true });
+      const cleaned = text.replace(/```(?:json)?\s*([\s\S]*?)```/i, "$1").trim();
+      const parsed = JSON.parse(cleaned) as { items?: unknown };
+      const items = Array.isArray(parsed.items) ? parsed.items : [];
+      return { ok: true as const, items };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
     }
   });
 
