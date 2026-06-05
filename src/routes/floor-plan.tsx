@@ -208,6 +208,36 @@ function ReportHeader({ report }: { report: Report }) {
   );
 }
 
+function DetectionReport({ report }: { report: Report }) {
+  const rooms = report.rooms ?? [];
+  const overall = report.confidence?.overall;
+  return (
+    <LuxeCard className="p-5">
+      <SectionTitle label="Property Detection Report" />
+      <div className="grid grid-cols-3 gap-3 mt-3">
+        <Pill label="Rooms Detected" value={String(rooms.length)} />
+        <Pill label="Total Area" value={`${report.property?.total_internal_area_m2 ?? "—"} m²`} />
+        <Pill label="Confidence" value={typeof overall === "number" ? `${Math.round(overall)}%` : "—"} />
+      </div>
+      <div className="mt-4">
+        <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2">Room Breakdown</div>
+        <ul className="space-y-1 text-sm">
+          {rooms.map((r, i) => (
+            <li key={i} className="flex items-baseline justify-between border-b border-white/5 py-1">
+              <span><span className="text-gold mr-2">Detected:</span>{r.name}</span>
+              <span className="text-muted-foreground text-xs">
+                {r.width_m && r.length_m ? `${r.width_m}m × ${r.length_m}m` : "dimensions unreadable"} {r.area_m2 ? `• ${r.area_m2} m²` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </LuxeCard>
+  );
+}
+
+
+
 function PropertyOverview({ report }: { report: Report }) {
   const rooms = report.rooms ?? [];
   return (
