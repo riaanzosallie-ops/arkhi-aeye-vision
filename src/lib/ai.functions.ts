@@ -402,8 +402,8 @@ export const aiFloorPlan = createServerFn({ method: "POST" })
       const json = await res.json();
       const raw: string = json?.choices?.[0]?.message?.content ?? "";
       try {
-        const parsed = JSON.parse(stripJson(raw)) as Record<string, unknown>;
-        return { ok: true as const, report: parsed };
+        const parsed = JSON.parse(stripJson(raw));
+        return { ok: true as const, reportJson: JSON.stringify(parsed) };
       } catch {
         return { ok: false as const, error: "AI_PARSE_FAIL", raw: String(raw).slice(0, 1200) };
       }
