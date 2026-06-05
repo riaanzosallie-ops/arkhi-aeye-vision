@@ -35,6 +35,8 @@ type InsItem = {
   comparable_used?: boolean; notes?: string; confidence?: number;
 };
 type Report = {
+  detection_status?: "ok" | "failed";
+  pipeline?: { ocr_ran?: boolean; room_detection_ran?: boolean; area_calculation_ran?: boolean };
   property?: { name?: string; total_internal_area_m2?: number; currency?: string };
   rooms?: Room[];
   property_scores?: Record<string, number>;
