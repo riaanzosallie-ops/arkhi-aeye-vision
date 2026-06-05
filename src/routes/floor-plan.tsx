@@ -155,9 +155,23 @@ function FloorPlan() {
         </div>
       </div>
 
-      {report && (
+      {report && report.detection_status === "failed" && (
+        <LuxeCard className="p-5 mt-6 border border-amber-400/40">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-amber-300 mb-2">Detection Failed</div>
+          <div className="font-display text-xl mb-2">Unable to confidently detect floor plan.</div>
+          <div className="text-sm text-muted-foreground">Please upload a clearer image — labels and printed dimensions must be visible.</div>
+          {report.clarification_needed && report.clarification_needed.length > 0 && (
+            <ul className="list-disc pl-5 text-sm text-amber-200/90 space-y-1 mt-3">
+              {report.clarification_needed.map((c, i) => <li key={i}>{c}</li>)}
+            </ul>
+          )}
+        </LuxeCard>
+      )}
+
+      {report && report.detection_status !== "failed" && (
         <div id="arkhi-report" className="mt-8 space-y-6 print:mt-0">
           <ReportHeader report={report} />
+          <DetectionReport report={report} />
           <PropertyOverview report={report} />
           <RoomBreakdown rooms={report.rooms ?? []} />
           <RenovationSummary report={report} />
