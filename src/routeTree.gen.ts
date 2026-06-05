@@ -12,15 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ValuationRouteImport } from './routes/valuation'
 import { Route as SnapCompareRouteImport } from './routes/snap-compare'
 import { Route as ScannerRouteImport } from './routes/scanner'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as InvestorRouteImport } from './routes/investor'
 import { Route as HomeProfileRouteImport } from './routes/home-profile'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FloorPlanRouteImport } from './routes/floor-plan'
 import { Route as DesignRouteImport } from './routes/design'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ValuationRoute = ValuationRouteImport.update({
@@ -36,6 +39,11 @@ const SnapCompareRoute = SnapCompareRouteImport.update({
 const ScannerRoute = ScannerRouteImport.update({
   id: '/scanner',
   path: '/scanner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -63,6 +71,11 @@ const HomeProfileRoute = HomeProfileRouteImport.update({
   path: '/home-profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FloorPlanRoute = FloorPlanRouteImport.update({
   id: '/floor-plan',
   path: '/floor-plan',
@@ -83,6 +96,11 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -91,30 +109,36 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/companies': typeof CompaniesRoute
   '/design': typeof DesignRoute
   '/floor-plan': typeof FloorPlanRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/home-profile': typeof HomeProfileRoute
   '/investor': typeof InvestorRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
   '/valuation': typeof ValuationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/companies': typeof CompaniesRoute
   '/design': typeof DesignRoute
   '/floor-plan': typeof FloorPlanRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/home-profile': typeof HomeProfileRoute
   '/investor': typeof InvestorRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
   '/valuation': typeof ValuationRoute
@@ -122,15 +146,18 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/companies': typeof CompaniesRoute
   '/design': typeof DesignRoute
   '/floor-plan': typeof FloorPlanRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/home-profile': typeof HomeProfileRoute
   '/investor': typeof InvestorRoute
   '/pricing': typeof PricingRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/scanner': typeof ScannerRoute
   '/snap-compare': typeof SnapCompareRoute
   '/valuation': typeof ValuationRoute
@@ -139,45 +166,54 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/chat'
     | '/companies'
     | '/design'
     | '/floor-plan'
+    | '/forgot-password'
     | '/home-profile'
     | '/investor'
     | '/pricing'
     | '/profile'
     | '/projects'
+    | '/reset-password'
     | '/scanner'
     | '/snap-compare'
     | '/valuation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/chat'
     | '/companies'
     | '/design'
     | '/floor-plan'
+    | '/forgot-password'
     | '/home-profile'
     | '/investor'
     | '/pricing'
     | '/profile'
     | '/projects'
+    | '/reset-password'
     | '/scanner'
     | '/snap-compare'
     | '/valuation'
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/chat'
     | '/companies'
     | '/design'
     | '/floor-plan'
+    | '/forgot-password'
     | '/home-profile'
     | '/investor'
     | '/pricing'
     | '/profile'
     | '/projects'
+    | '/reset-password'
     | '/scanner'
     | '/snap-compare'
     | '/valuation'
@@ -185,15 +221,18 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
   CompaniesRoute: typeof CompaniesRoute
   DesignRoute: typeof DesignRoute
   FloorPlanRoute: typeof FloorPlanRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeProfileRoute: typeof HomeProfileRoute
   InvestorRoute: typeof InvestorRoute
   PricingRoute: typeof PricingRoute
   ProfileRoute: typeof ProfileRoute
   ProjectsRoute: typeof ProjectsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ScannerRoute: typeof ScannerRoute
   SnapCompareRoute: typeof SnapCompareRoute
   ValuationRoute: typeof ValuationRoute
@@ -220,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/scanner'
       fullPath: '/scanner'
       preLoaderRoute: typeof ScannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -257,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/floor-plan': {
       id: '/floor-plan'
       path: '/floor-plan'
@@ -285,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -297,15 +357,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   CompaniesRoute: CompaniesRoute,
   DesignRoute: DesignRoute,
   FloorPlanRoute: FloorPlanRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   HomeProfileRoute: HomeProfileRoute,
   InvestorRoute: InvestorRoute,
   PricingRoute: PricingRoute,
   ProfileRoute: ProfileRoute,
   ProjectsRoute: ProjectsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ScannerRoute: ScannerRoute,
   SnapCompareRoute: SnapCompareRoute,
   ValuationRoute: ValuationRoute,
