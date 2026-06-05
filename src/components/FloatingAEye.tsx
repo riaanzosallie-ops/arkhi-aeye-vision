@@ -12,7 +12,7 @@ const ROUTE_CONTEXT: Record<string, { kind: string; hint: string }> = {
   "/design": { kind: "chat", hint: "redesign directions, styles and design journey" },
   "/scanner": { kind: "scanner", hint: "the room currently being analyzed" },
   "/snap-compare": { kind: "snap", hint: "comparing a furniture item to the user's saved room" },
-  "/floor-plan": { kind: "floorplan", hint: "floor plan, dimensions and zoning" },
+  "/floor-plan": { kind: "chat", hint: "the Floor Plan Intelligence page. The user uploads a floor plan image on this page and the vision analyzer (not you) produces the OCR + room detection report. Do NOT ask them to share a floor plan or dimensions — they have already uploaded one. Only answer follow-up questions about the report shown on the page" },
   "/companies": { kind: "chat", hint: "Company Hub partner value, white-label, lead capture" },
   "/investor": { kind: "investor", hint: "ROI, SaaS tiers, white-label, commercial model" },
   "/pricing": { kind: "pricing", hint: "UAE retailers and full-room shopping plans" },
