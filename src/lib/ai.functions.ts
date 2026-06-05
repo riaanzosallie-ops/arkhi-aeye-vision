@@ -289,3 +289,125 @@ export const aiValuate = createServerFn({ method: "POST" })
       return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
     }
   });
+
+// ─── AI Floor Plan Intelligence ────────────────────────────────────────
+const FLOORPLAN_SYSTEM = `${ARKHI_CORE}
+You are A-Eye Floor Plan Intelligence — an architect + quantity surveyor + insurance assessor + interior designer combined. From the supplied floor plan image(s), perform real spatial analysis (OCR room labels, read printed dimensions, count doors/windows, compute areas). Never invent dimensions; if unreadable, mark low confidence and ask for clarification in clarification_needed.
+
+Return ONLY valid JSON (no prose, no markdown fences) in this exact shape:
+
+{
+  "property": {
+    "name": "Detected property / unit",
+    "total_internal_area_m2": 120,
+    "unit_system": "metric",
+    "currency": "AED"
+  },
+  "rooms": [
+    {
+      "name": "Living Room",
+      "width_m": 6, "length_m": 5, "area_m2": 30,
+      "doors": 2, "windows": 2,
+      "recommended_furniture": ["1 x 4-seater sofa","2 x accent chairs","1 x coffee table","1 x 75\\" TV","1 x entertainment wall"],
+      "layout_notes": "Sofa on long wall facing TV; coffee table central; circulation 1.1m around sofa.",
+      "lighting": ["Central pendant","Two floor lamps","Dimmable LED cove"],
+      "storage": ["Low media unit","Concealed sideboard"],
+      "optimization": ["Float sofa 30cm off wall","Use rug to anchor zone"],
+      "scores": { "space_efficiency": 92, "luxury_potential": 95, "family_friendly": 88, "natural_flow": 90, "storage": 70, "resale": 92 },
+      "renovation": { "budget_aed": 12000, "midrange_aed": 28000, "luxury_aed": 55000 },
+      "boq": {
+        "flooring_m2": 30, "paint_wall_m2": 60, "ceiling_m2": 30, "skirting_m": 22,
+        "doors": 1, "windows": 2,
+        "estimated_cost_aed": { "flooring": 4500, "paint": 1800, "ceiling": 2100, "skirting": 660, "labour": 3500 }
+      }
+    }
+  ],
+  "property_scores": {
+    "space_efficiency": 0, "natural_flow": 0, "storage_potential": 0,
+    "luxury_potential": 0, "family_friendly": 0, "resale_potential": 0
+  },
+  "commercial": {
+    "usable_area_m2": 0, "gross_area_m2": 0,
+    "occupancy_potential": "e.g. 4-6 residents",
+    "retail_potential": "Low|Medium|High — short reason",
+    "office_potential": "Low|Medium|High — short reason",
+    "hospitality_potential": "Low|Medium|High — short reason"
+  },
+  "boq_totals": {
+    "flooring_m2": 0, "paint_wall_m2": 0, "ceiling_m2": 0, "skirting_m": 0,
+    "doors": 0, "windows": 0, "total_cost_aed": 0
+  },
+  "renovation_totals": { "budget_aed": 0, "midrange_aed": 0, "luxury_aed": 0 },
+  "insurance": {
+    "enabled": true,
+    "items": [
+      { "name": "Samsung 75\\" TV", "category": "Electronics", "quantity": 1,
+        "replacement_aed": 4999, "market_aed": 4200, "depreciated_aed": 2800, "insurance_aed": 4999,
+        "comparable_used": true, "notes": "Original unavailable — closest modern equivalent.", "confidence": 91 }
+    ]
+  },
+  "confidence": {
+    "room_detection": 0, "dimension_detection": 0, "furniture_detection": 0, "valuation": 0, "overall": 0
+  },
+  "clarification_needed": []
+}
+
+Rules:
+- Detect EVERY room visible. Use OCR on labels (Bedroom 1, Kitchen, Bathroom, Living Room, Dining, Laundry, Balcony, etc.).
+- Read printed dimensions inside each room. Compute area = width × length. If only area is printed, infer width/length from scale.
+- Sum total_internal_area_m2 from rooms.
+- For every room, ALWAYS fill recommended_furniture, layout_notes, lighting, storage, optimization, scores, renovation, boq.
+- Renovation costs are realistic UAE 2024–2025 ranges (AED).
+- BOQ uses actual computed areas. paint_wall_m2 = perimeter × ceiling_height (assume 3.0m if unknown). ceiling_m2 = area_m2. skirting_m = perimeter − door widths.
+- property_scores are averaged/weighted from room scores, 0–100.
+- commercial: derive usable vs gross (gross ≈ usable × 1.15 if not shown), give short qualitative potentials.
+- insurance.items: only if furniture/objects are clearly visible (rare on a plan); otherwise return enabled=false and items=[].
+- confidence values 0–100. If dimensions are unreadable, lower dimension_detection and add a clarification_needed entry like "Confirm Bedroom 2 dimensions — label unreadable".
+- NO filler language. NO "imagine your future space". Numbers and recommendations only.`;
+
+export const aiFloorPlan = createServerFn({ method: "POST" })
+  .inputValidator((d: { imageUrls: string[]; notes?: string; currency?: string }) =>
+    z.object({
+      imageUrls: z.array(z.string().url()).min(1).max(6),
+      notes: z.string().max(2000).optional(),
+      currency: z.string().min(2).max(6).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) return { ok: false as const, error: "AI_KEY_MISSING" };
+    const currency = data.currency ?? "AED";
+    const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+      { type: "text", text: `Currency: ${currency}. ${data.notes ? `User notes: ${data.notes}. ` : ""}Analyze the ${data.imageUrls.length} floor plan image(s). OCR labels, read dimensions, compute areas, then return the JSON described.` },
+      ...data.imageUrls.map(url => ({ type: "image_url" as const, image_url: { url } })),
+    ];
+    try {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: "system", content: FLOORPLAN_SYSTEM },
+            { role: "user", content: userContent },
+          ],
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        if (res.status === 429) return { ok: false as const, error: "AI_RATE_LIMIT" };
+        if (res.status === 402) return { ok: false as const, error: "AI_CREDITS" };
+        return { ok: false as const, error: `AI_ERROR_${res.status}: ${txt.slice(0, 200)}` };
+      }
+      const json = await res.json();
+      const raw: string = json?.choices?.[0]?.message?.content ?? "";
+      try {
+        const parsed = JSON.parse(stripJson(raw));
+        return { ok: true as const, reportJson: JSON.stringify(parsed) };
+      } catch {
+        return { ok: false as const, error: "AI_PARSE_FAIL", raw: String(raw).slice(0, 1200) };
+      }
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
+    }
+  });
