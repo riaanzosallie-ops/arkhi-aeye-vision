@@ -1,11 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   Home, LayoutGrid, House, ScanLine, Camera, Map, ShoppingBag,
-  Building2, TrendingUp, FolderKanban, MessagesSquare, User2, Eye, ShieldCheck,
+  Building2, FolderKanban, MessagesSquare, User2, Eye, ShieldCheck,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { FloatingAEye } from "@/components/FloatingAEye";
-import { useAuth } from "@/lib/useAuth";
 
 export const OWNER_EMAIL = "riaanzosallie@gmail.com";
 
@@ -24,17 +23,13 @@ export const NAV_BASE = [
   { to: "/profile", label: "Profile", icon: User2 },
 ] as const;
 
-const OWNER_NAV = { to: "/investor", label: "Investor Mode", icon: TrendingUp } as const;
-
 type NavEntry = { to: string; label: string; icon: typeof Home };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
-  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const isLanding = loc.pathname === "/";
-  const isOwner = user?.email?.toLowerCase() === OWNER_EMAIL;
-  const NAV: readonly NavEntry[] = isOwner ? [...NAV_BASE, OWNER_NAV] : NAV_BASE;
+  const NAV: readonly NavEntry[] = NAV_BASE;
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
