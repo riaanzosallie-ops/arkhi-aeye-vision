@@ -100,6 +100,8 @@ function FloorPlan() {
           res.error === "AI_HALLUCINATION_BLOCKED" ? "AI response was generic, not grounded in the image. Please re-run or upload a clearer plan." :
           `AI error: ${res.error}`,
         );
+      }
+    } finally {
       setBusy(false);
     }
   };
