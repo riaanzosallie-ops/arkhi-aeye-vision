@@ -232,14 +232,8 @@ function FloorPlan() {
 
           <DebugPanel fileMeta={fileMeta} stage={stage} cloudUploaded={Boolean(path)} report={report} />
 
-          {report && stage === "done" && (
-            <LuxeCard className="p-5 flex items-center justify-between">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Executive report ready</div>
-                <div className="text-sm text-muted-foreground">{report.rooms?.length ?? 0} rooms • {report.property?.total_internal_area_m2 ?? "—"} m²</div>
-              </div>
-              <GoldButton onClick={printReport}><Printer className="inline size-4 mr-1" /> Export PDF</GoldButton>
-            </LuxeCard>
+          {report && (stage === "done" || stage === "failed") && (
+            <ReportActions report={report} signedIn={Boolean(user)} cloudPath={path} onPrint={printReport} />
           )}
         </div>
       </div>
