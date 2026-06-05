@@ -596,3 +596,85 @@ function Pill({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function ReportActions({
+  report, signedIn, cloudPath, onPrint,
+}: { report: Report; signedIn: boolean; cloudPath: string | null; onPrint: () => void }) {
+  const [msg, setMsg] = useState<string | null>(null);
+  const text = buildReportText(report);
+
+  const flash = (m: string) => { setMsg(m); window.setTimeout(() => setMsg(null), 2400); };
+
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(text); flash("Report copied to clipboard."); }
+    catch { flash("Copy failed — long-press the report text to copy manually."); }
+  };
+
+  const share = async () => {
+    const data = { title: "ARKHI Property Detection Report", text };
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try { await (navigator as Navigator & { share: (d: ShareData) => Promise<void> }).share(data); return; }
+      catch { /* user cancelled */ }
+    }
+    await copy();
+  };
+
+  const download = () => {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `arkhi-report-${Date.now()}.txt`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const save = async () => {
+    if (!signedIn) { flash("Create a free account to save and export your Arkhi report."); return; }
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    if (!uid) { flash("Sign in again to save."); return; }
+    const { error } = await supabase.from("scans").insert({
+      user_id: uid, kind: "floorplan", image_path: cloudPath, result: report as never,
+    });
+    if (error) flash(`Save failed: ${error.message}`);
+    else flash("Saved to your account.");
+  };
+
+  return (
+    <LuxeCard className="p-5">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2">
+        {report.detection_status === "failed" ? "Report — Failed" : "Report ready"}
+      </div>
+      <div className="text-sm text-muted-foreground mb-4">
+        {report.detection_status === "failed"
+          ? "Analysis could not confidently detect rooms or dimensions."
+          : <>{report.rooms?.length ?? 0} rooms • {report.property?.total_internal_area_m2 ?? "—"} m²</>}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <GhostButton onClick={copy}><Copy className="inline size-4 mr-1" />Copy</GhostButton>
+        <GhostButton onClick={share}><Share2 className="inline size-4 mr-1" />Share</GhostButton>
+        <GhostButton onClick={download}><Download className="inline size-4 mr-1" />Download .txt</GhostButton>
+        {signedIn ? (
+          <GhostButton onClick={save}><Save className="inline size-4 mr-1" />Save</GhostButton>
+        ) : (
+          <Link to="/auth"><GhostButton className="w-full"><Lock className="inline size-4 mr-1" />Save (sign in)</GhostButton></Link>
+        )}
+      </div>
+      {report.detection_status !== "failed" && (
+        <div className="mt-3">
+          {signedIn ? (
+            <GoldButton className="w-full" onClick={onPrint}><Printer className="inline size-4 mr-1" /> Export PDF</GoldButton>
+          ) : (
+            <Link to="/auth" className="block"><GoldButton className="w-full"><Lock className="inline size-4 mr-1" /> Sign in to export PDF</GoldButton></Link>
+          )}
+        </div>
+      )}
+      {!signedIn && (
+        <div className="text-[11px] text-muted-foreground mt-3">
+          Preview Access — create a free account to save and export your Arkhi report.
+        </div>
+      )}
+      {msg && <div className="text-xs text-gold mt-3">{msg}</div>}
+    </LuxeCard>
+  );
+}
