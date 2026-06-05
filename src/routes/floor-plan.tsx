@@ -51,48 +51,48 @@ type Report = {
 const fmtAED = (n?: number) => (typeof n === "number" ? `AED ${n.toLocaleString()}` : "—");
 const pct = (n?: number) => (typeof n === "number" ? `${Math.round(n)}%` : "—");
 
+function fileToDataUrl(f: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(new Error("file_read_failed"));
+    r.readAsDataURL(f);
+  });
+}
+
+type Stage = "idle" | "uploading" | "analyzing" | "done" | "failed";
+
 function FloorPlan() {
   const { user } = useAuth();
   const analyze = useServerFn(aiFloorPlan);
   const [url, setUrl] = useState<string | null>(null);
   const [path, setPath] = useState<string | null>(null);
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const [fileMeta, setFileMeta] = useState<{ name: string; type: string; size: number } | null>(null);
   const [notes, setNotes] = useState("");
   const [report, setReport] = useState<Report | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<Stage>("idle");
   const ref = useRef<HTMLInputElement>(null);
 
-  const onFile = async (f: File) => {
-    setUrl(URL.createObjectURL(f));
-    setPath(null);
-    setReport(null);
-    if (user) {
-      const up = await uploadUserFile("floor-plans", f);
-      if (up.ok) setPath(up.path);
-    }
-  };
-
-  const run = async () => {
-    setBusy(true); setErr(null); setReport(null);
+  const runWith = async (sourceUrl: string, cloudPath: string | null) => {
+    setBusy(true); setStage("analyzing"); setErr(null); setReport(null);
     try {
-      if (!path) {
-        setErr("Sign in and upload a floor plan to run AI analysis on the actual image.");
-        setBusy(false); return;
-      }
-      const signed = await signedRoomUrl(path, "floor-plans");
-      if (!signed) { setErr("Could not generate a signed URL for the plan."); setBusy(false); return; }
-      const res = await trackAi("floorplan", () => analyze({ data: { imageUrls: [signed], notes } }));
+      console.info("[floor-plan] analyze start", { source: sourceUrl.slice(0, 32) });
+      const res = await trackAi("floorplan", () => analyze({ data: { imageUrls: [sourceUrl], notes } }));
       if (res.ok) {
         try {
           const parsed = JSON.parse(res.reportJson) as Report;
           setReport(parsed);
-          if (user) {
+          setStage(parsed.detection_status === "failed" ? "failed" : "done");
+          if (user && cloudPath) {
             await supabase.from("scans").insert({
-              user_id: user.id, kind: "floorplan", image_path: path, result: parsed as never,
+              user_id: user.id, kind: "floorplan", image_path: cloudPath, result: parsed as never,
             });
           }
         } catch {
-          setErr("AI returned an unreadable report.");
+          setErr("AI returned an unreadable report."); setStage("failed");
         }
       } else {
         setErr(
@@ -100,13 +100,46 @@ function FloorPlan() {
           res.error === "AI_HALLUCINATION_BLOCKED" ? "AI response was generic, not grounded in the image. Please re-run or upload a clearer plan." :
           `AI error: ${res.error}`,
         );
+        setStage("failed");
       }
     } finally {
       setBusy(false);
     }
   };
 
+  const onFile = async (f: File) => {
+    setUrl(URL.createObjectURL(f));
+    setPath(null);
+    setReport(null);
+    setErr(null);
+    setFileMeta({ name: f.name, type: f.type || "unknown", size: f.size });
+    setStage("uploading");
+    console.info("[floor-plan] file received", { name: f.name, type: f.type, size: f.size });
+
+    let data: string | null = null;
+    try { data = await fileToDataUrl(f); setDataUrl(data); }
+    catch { setErr("Could not read the uploaded file."); setStage("failed"); return; }
+
+    let signed: string | null = null;
+    let cloudPath: string | null = null;
+    if (user) {
+      const up = await uploadUserFile("floor-plans", f);
+      if (up.ok) {
+        cloudPath = up.path;
+        setPath(up.path);
+        signed = await signedRoomUrl(up.path, "floor-plans");
+      }
+    }
+    void runWith(signed ?? data, cloudPath);
+  };
+
+  const rerun = () => {
+    if (!dataUrl) { setErr("Upload a floor plan first."); return; }
+    void runWith(dataUrl, path);
+  };
+
   const printReport = () => window.print();
+  const hasFile = Boolean(url);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -140,14 +173,17 @@ function FloorPlan() {
               className="w-full bg-input/40 hairline rounded px-3 py-2 text-sm h-24"
             />
             <div className="flex gap-2 mt-4">
-              <GoldButton className="flex-1" onClick={run} disabled={busy || !url}>{busy ? "Analyzing plan…" : "Run Intelligence"}</GoldButton>
+              <GoldButton className="flex-1" onClick={rerun} disabled={busy || !hasFile}>
+                {busy ? "Analyzing plan…" : hasFile ? "Re-run Intelligence" : "Upload a floor plan to begin"}
+              </GoldButton>
               <GhostButton onClick={() => ref.current?.click()}><Upload className="inline size-4" /></GhostButton>
             </div>
-            {!user && <div className="text-xs text-muted-foreground mt-2">Sign in — the AI reads the actual uploaded image, so cloud storage is required.</div>}
             {err && <div className="text-sm text-amber-300 mt-3">{err}</div>}
           </LuxeCard>
 
-          {report && (
+          <DebugPanel fileMeta={fileMeta} stage={stage} cloudUploaded={Boolean(path)} report={report} />
+
+          {report && stage === "done" && (
             <LuxeCard className="p-5 flex items-center justify-between">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Executive report ready</div>
@@ -159,12 +195,17 @@ function FloorPlan() {
         </div>
       </div>
 
-      {report && report.detection_status === "failed" && (
+      {hasFile && stage === "failed" && (
         <LuxeCard className="p-5 mt-6 border border-amber-400/40">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-amber-300 mb-2">Detection Failed</div>
-          <div className="font-display text-xl mb-2">Unable to confidently detect floor plan.</div>
-          <div className="text-sm text-muted-foreground">Please upload a clearer image — labels and printed dimensions must be visible.</div>
-          {report.clarification_needed && report.clarification_needed.length > 0 && (
+          <div className="text-[10px] uppercase tracking-[0.3em] text-amber-300 mb-2">Property Detection Report — Analysis Failed</div>
+          <div className="font-display text-xl mb-2">Unable to detect room labels or dimensions.</div>
+          <div className="text-sm text-muted-foreground">Recommendations:</div>
+          <ul className="list-disc pl-5 text-sm text-amber-200/90 space-y-1 mt-2">
+            <li>Upload a higher-resolution image.</li>
+            <li>Upload a PDF page exported as PNG/JPG.</li>
+            <li>Ensure room labels and printed dimensions are readable.</li>
+          </ul>
+          {report?.clarification_needed && report.clarification_needed.length > 0 && (
             <ul className="list-disc pl-5 text-sm text-amber-200/90 space-y-1 mt-3">
               {report.clarification_needed.map((c, i) => <li key={i}>{c}</li>)}
             </ul>
@@ -172,7 +213,7 @@ function FloorPlan() {
         </LuxeCard>
       )}
 
-      {report && report.detection_status !== "failed" && (
+      {report && stage === "done" && (
         <div id="arkhi-report" className="mt-8 space-y-6 print:mt-0">
           <ReportHeader report={report} />
           <DetectionReport report={report} />
@@ -190,6 +231,43 @@ function FloorPlan() {
         </div>
       )}
     </div>
+  );
+}
+
+function DebugPanel({
+  fileMeta, stage, cloudUploaded, report,
+}: {
+  fileMeta: { name: string; type: string; size: number } | null;
+  stage: Stage;
+  cloudUploaded: boolean;
+  report: Report | null;
+}) {
+  const ocrRan = Boolean(report?.pipeline?.ocr_ran);
+  const roomRan = Boolean(report?.pipeline?.room_detection_ran);
+  const areaRan = Boolean(report?.pipeline?.area_calculation_ran);
+  const rooms = report?.rooms ?? [];
+  const dimsFound = rooms.filter(r => r.width_m && r.length_m).length;
+  const conf = report?.confidence?.overall;
+  const row = (k: string, v: string, tone: "ok" | "warn" | "muted" = "muted") => (
+    <div className="flex justify-between text-xs py-1 border-b border-white/5">
+      <span className="text-muted-foreground">{k}</span>
+      <span className={tone === "ok" ? "text-gold" : tone === "warn" ? "text-amber-300" : "text-foreground/80"}>{v}</span>
+    </div>
+  );
+  return (
+    <LuxeCard className="p-4">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2">Debug — Detection Pipeline</div>
+      {row("File Received", fileMeta ? "YES" : "NO", fileMeta ? "ok" : "warn")}
+      {fileMeta && row("File", `${fileMeta.name} • ${(fileMeta.size / 1024).toFixed(0)} KB`)}
+      {row("Cloud Upload", cloudUploaded ? "YES" : "NO (inline)")}
+      {row("Stage", stage.toUpperCase(), stage === "failed" ? "warn" : stage === "done" ? "ok" : "muted")}
+      {row("OCR Run", ocrRan ? "YES" : "NO", ocrRan ? "ok" : "warn")}
+      {row("Room Detection", roomRan ? "YES" : "NO", roomRan ? "ok" : "warn")}
+      {row("Rooms Detected", String(rooms.length), rooms.length > 0 ? "ok" : "warn")}
+      {row("Dimensions Found", String(dimsFound), dimsFound > 0 ? "ok" : "warn")}
+      {row("Area Calculation", areaRan ? "YES" : "NO", areaRan ? "ok" : "warn")}
+      {row("Confidence", typeof conf === "number" ? `${Math.round(conf)}%` : "—", typeof conf === "number" && conf >= 55 ? "ok" : "warn")}
+    </LuxeCard>
   );
 }
 
