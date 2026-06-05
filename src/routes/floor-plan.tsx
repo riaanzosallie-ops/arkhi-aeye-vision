@@ -35,6 +35,8 @@ type InsItem = {
   comparable_used?: boolean; notes?: string; confidence?: number;
 };
 type Report = {
+  detection_status?: "ok" | "failed";
+  pipeline?: { ocr_ran?: boolean; room_detection_ran?: boolean; area_calculation_ran?: boolean };
   property?: { name?: string; total_internal_area_m2?: number; currency?: string };
   rooms?: Room[];
   property_scores?: Record<string, number>;
@@ -93,7 +95,11 @@ function FloorPlan() {
           setErr("AI returned an unreadable report.");
         }
       } else {
-        setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
+        setErr(
+          res.error === "AI_KEY_MISSING" ? "AI setup required" :
+          res.error === "AI_HALLUCINATION_BLOCKED" ? "AI response was generic, not grounded in the image. Please re-run or upload a clearer plan." :
+          `AI error: ${res.error}`,
+        );
       }
     } finally {
       setBusy(false);
@@ -153,9 +159,23 @@ function FloorPlan() {
         </div>
       </div>
 
-      {report && (
+      {report && report.detection_status === "failed" && (
+        <LuxeCard className="p-5 mt-6 border border-amber-400/40">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-amber-300 mb-2">Detection Failed</div>
+          <div className="font-display text-xl mb-2">Unable to confidently detect floor plan.</div>
+          <div className="text-sm text-muted-foreground">Please upload a clearer image — labels and printed dimensions must be visible.</div>
+          {report.clarification_needed && report.clarification_needed.length > 0 && (
+            <ul className="list-disc pl-5 text-sm text-amber-200/90 space-y-1 mt-3">
+              {report.clarification_needed.map((c, i) => <li key={i}>{c}</li>)}
+            </ul>
+          )}
+        </LuxeCard>
+      )}
+
+      {report && report.detection_status !== "failed" && (
         <div id="arkhi-report" className="mt-8 space-y-6 print:mt-0">
           <ReportHeader report={report} />
+          <DetectionReport report={report} />
           <PropertyOverview report={report} />
           <RoomBreakdown rooms={report.rooms ?? []} />
           <RenovationSummary report={report} />
@@ -187,6 +207,36 @@ function ReportHeader({ report }: { report: Report }) {
     </div>
   );
 }
+
+function DetectionReport({ report }: { report: Report }) {
+  const rooms = report.rooms ?? [];
+  const overall = report.confidence?.overall;
+  return (
+    <LuxeCard className="p-5">
+      <SectionTitle label="Property Detection Report" />
+      <div className="grid grid-cols-3 gap-3 mt-3">
+        <Pill label="Rooms Detected" value={String(rooms.length)} />
+        <Pill label="Total Area" value={`${report.property?.total_internal_area_m2 ?? "—"} m²`} />
+        <Pill label="Confidence" value={typeof overall === "number" ? `${Math.round(overall)}%` : "—"} />
+      </div>
+      <div className="mt-4">
+        <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2">Room Breakdown</div>
+        <ul className="space-y-1 text-sm">
+          {rooms.map((r, i) => (
+            <li key={i} className="flex items-baseline justify-between border-b border-white/5 py-1">
+              <span><span className="text-gold mr-2">Detected:</span>{r.name}</span>
+              <span className="text-muted-foreground text-xs">
+                {r.width_m && r.length_m ? `${r.width_m}m × ${r.length_m}m` : "dimensions unreadable"} {r.area_m2 ? `• ${r.area_m2} m²` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </LuxeCard>
+  );
+}
+
+
 
 function PropertyOverview({ report }: { report: Report }) {
   const rooms = report.rooms ?? [];
