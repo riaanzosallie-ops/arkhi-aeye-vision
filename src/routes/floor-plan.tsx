@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { trackAi } from "@/lib/analytics";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Upload, FileText, Printer } from "lucide-react";
+import { Upload, FileText, Printer, Copy, Share2, Download, Save, Lock } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton, GhostButton } from "@/components/ui-kit";
 import { useAuth } from "@/lib/useAuth";
 import { uploadUserFile } from "@/lib/upload";
@@ -50,6 +50,55 @@ type Report = {
 
 const fmtAED = (n?: number) => (typeof n === "number" ? `AED ${n.toLocaleString()}` : "—");
 const pct = (n?: number) => (typeof n === "number" ? `${Math.round(n)}%` : "—");
+
+function buildReportText(report: Report): string {
+  const lines: string[] = [];
+  const ts = new Date().toLocaleString();
+  const status = report.detection_status === "failed" ? "Analysis Failed" : "Completed";
+  lines.push("PROPERTY DETECTION REPORT");
+  lines.push(`Generated: ${ts}`);
+  lines.push("");
+  lines.push(`File Received: Yes`);
+  lines.push(`OCR Status: ${report.pipeline?.ocr_ran ? "Completed" : "Failed"}`);
+  lines.push(`Status: ${status}`);
+  if (report.detection_status === "failed") {
+    lines.push("");
+    lines.push("Reason: Unable to confidently detect room labels or dimensions.");
+    if (report.clarification_needed?.length) {
+      lines.push("");
+      lines.push("Details:");
+      report.clarification_needed.forEach(c => lines.push(`  - ${c}`));
+    }
+    lines.push("");
+    lines.push("Recommendations:");
+    lines.push("  - Upload a clearer image");
+    lines.push("  - Upload a PDF page exported as PNG/JPG");
+    lines.push("  - Ensure room labels and printed dimensions are visible");
+    lines.push("  - Avoid cropped or low-resolution screenshots");
+    return lines.join("\n");
+  }
+  const rooms = report.rooms ?? [];
+  lines.push(`Rooms Detected: ${rooms.length}`);
+  lines.push(`Total Internal Area: ${report.property?.total_internal_area_m2 ?? "—"} m²`);
+  lines.push(`Confidence: ${typeof report.confidence?.overall === "number" ? `${Math.round(report.confidence.overall)}%` : "—"}`);
+  lines.push("");
+  lines.push("ROOM BREAKDOWN");
+  lines.push("Room Name | Dimensions | Area | Confidence");
+  rooms.forEach(r => {
+    const dim = r.width_m && r.length_m ? `${r.width_m}m x ${r.length_m}m` : "Not confidently detected";
+    const area = r.area_m2 ? `${r.area_m2} m²` : "—";
+    const conf = report.confidence?.room_detection ? `${Math.round(report.confidence.room_detection)}%` : "—";
+    lines.push(`${r.name} | ${dim} | ${area} | ${conf}`);
+  });
+  if (report.clarification_needed?.length) {
+    lines.push("");
+    lines.push("Clarifications:");
+    report.clarification_needed.forEach(c => lines.push(`  - ${c}`));
+  }
+  lines.push("");
+  lines.push("— ARKHI A-Eye Spatial Intelligence");
+  return lines.join("\n");
+}
 
 function fileToDataUrl(f: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -183,14 +232,8 @@ function FloorPlan() {
 
           <DebugPanel fileMeta={fileMeta} stage={stage} cloudUploaded={Boolean(path)} report={report} />
 
-          {report && stage === "done" && (
-            <LuxeCard className="p-5 flex items-center justify-between">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Executive report ready</div>
-                <div className="text-sm text-muted-foreground">{report.rooms?.length ?? 0} rooms • {report.property?.total_internal_area_m2 ?? "—"} m²</div>
-              </div>
-              <GoldButton onClick={printReport}><Printer className="inline size-4 mr-1" /> Export PDF</GoldButton>
-            </LuxeCard>
+          {report && (stage === "done" || stage === "failed") && (
+            <ReportActions report={report} signedIn={Boolean(user)} cloudPath={path} onPrint={printReport} />
           )}
         </div>
       </div>
@@ -551,5 +594,87 @@ function Pill({ label, value }: { label: string; value: string }) {
       <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
       <div className="font-display text-base">{value}</div>
     </div>
+  );
+}
+
+function ReportActions({
+  report, signedIn, cloudPath, onPrint,
+}: { report: Report; signedIn: boolean; cloudPath: string | null; onPrint: () => void }) {
+  const [msg, setMsg] = useState<string | null>(null);
+  const text = buildReportText(report);
+
+  const flash = (m: string) => { setMsg(m); window.setTimeout(() => setMsg(null), 2400); };
+
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(text); flash("Report copied to clipboard."); }
+    catch { flash("Copy failed — long-press the report text to copy manually."); }
+  };
+
+  const share = async () => {
+    const data = { title: "ARKHI Property Detection Report", text };
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try { await (navigator as Navigator & { share: (d: ShareData) => Promise<void> }).share(data); return; }
+      catch { /* user cancelled */ }
+    }
+    await copy();
+  };
+
+  const download = () => {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `arkhi-report-${Date.now()}.txt`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const save = async () => {
+    if (!signedIn) { flash("Create a free account to save and export your Arkhi report."); return; }
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    if (!uid) { flash("Sign in again to save."); return; }
+    const { error } = await supabase.from("scans").insert({
+      user_id: uid, kind: "floorplan", image_path: cloudPath, result: report as never,
+    });
+    if (error) flash(`Save failed: ${error.message}`);
+    else flash("Saved to your account.");
+  };
+
+  return (
+    <LuxeCard className="p-5">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-gold mb-2">
+        {report.detection_status === "failed" ? "Report — Failed" : "Report ready"}
+      </div>
+      <div className="text-sm text-muted-foreground mb-4">
+        {report.detection_status === "failed"
+          ? "Analysis could not confidently detect rooms or dimensions."
+          : <>{report.rooms?.length ?? 0} rooms • {report.property?.total_internal_area_m2 ?? "—"} m²</>}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <GhostButton onClick={copy}><Copy className="inline size-4 mr-1" />Copy</GhostButton>
+        <GhostButton onClick={share}><Share2 className="inline size-4 mr-1" />Share</GhostButton>
+        <GhostButton onClick={download}><Download className="inline size-4 mr-1" />Download .txt</GhostButton>
+        {signedIn ? (
+          <GhostButton onClick={save}><Save className="inline size-4 mr-1" />Save</GhostButton>
+        ) : (
+          <Link to="/auth"><GhostButton className="w-full"><Lock className="inline size-4 mr-1" />Save (sign in)</GhostButton></Link>
+        )}
+      </div>
+      {report.detection_status !== "failed" && (
+        <div className="mt-3">
+          {signedIn ? (
+            <GoldButton className="w-full" onClick={onPrint}><Printer className="inline size-4 mr-1" /> Export PDF</GoldButton>
+          ) : (
+            <Link to="/auth" className="block"><GoldButton className="w-full"><Lock className="inline size-4 mr-1" /> Sign in to export PDF</GoldButton></Link>
+          )}
+        </div>
+      )}
+      {!signedIn && (
+        <div className="text-[11px] text-muted-foreground mt-3">
+          Preview Access — create a free account to save and export your Arkhi report.
+        </div>
+      )}
+      {msg && <div className="text-xs text-gold mt-3">{msg}</div>}
+    </LuxeCard>
   );
 }

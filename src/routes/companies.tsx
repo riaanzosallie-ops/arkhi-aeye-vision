@@ -41,7 +41,7 @@ function Companies() {
       <PageHeader
         eyebrow="Retailer Platform"
         title={<>Company <span className="text-gradient-gold">Hub</span></>}
-        subtitle="White-label AI conversion engine for furniture retailers — room leads, catalogue recommendations, basket growth, and branch ROI. Partner cards below are demo shells until each retailer is onboarded with live data."
+        subtitle="White-label AI conversion engine for furniture retailers — room leads, catalogue recommendations, basket growth, and branch ROI. Each retailer card activates once their catalogue is connected."
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -50,7 +50,7 @@ function Companies() {
             <LuxeCard className={`p-6 h-full transition ${active === p.name ? "border-gold" : "hover:border-gold/40"}`}>
               <div className={`aspect-[3/2] rounded-lg bg-gradient-to-br ${p.color} mb-4 grid place-items-center font-display text-2xl relative`}>
                 {p.name}
-                <span className="absolute top-2 right-2 text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full hairline bg-onyx/60 text-muted-foreground">Demo Partner</span>
+                <span className="absolute top-2 right-2 text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full hairline bg-onyx/60 text-muted-foreground">Awaiting catalogue</span>
               </div>
               <div className="text-xs text-muted-foreground">{p.tag}</div>
             </LuxeCard>
@@ -62,7 +62,7 @@ function Companies() {
         <div className="flex items-center gap-3 mb-4">
           <div className="size-10 rounded-lg gradient-gold grid place-items-center text-onyx font-bold">{active.slice(0, 1)}</div>
           <div>
-            <div className="font-display text-xl">{active} workspace <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground ml-2">Demo</span></div>
+            <div className="font-display text-xl">{active} workspace</div>
             <div className="text-xs text-muted-foreground">Branded AI planner · Catalogue sync · Lead capture · Analytics</div>
           </div>
         </div>

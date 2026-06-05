@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ScanLine, Camera, Map, ShoppingBag, Building2, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowRight, ScanLine, Camera, Map, ShoppingBag, Building2, ShieldCheck, Sparkles } from "lucide-react";
 import { LuxeCard, GoldButton, GhostButton, StatTile } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/")({
@@ -15,10 +15,10 @@ export const Route = createFileRoute("/")({
 const FEATURES = [
   { to: "/scanner", icon: ScanLine, title: "A-Eye Scanner", desc: "Cinematic room analysis with live progress and dimension estimates." },
   { to: "/snap-compare", icon: Camera, title: "Snap & Compare", desc: "Photograph any item — get fit, style and clearance scores instantly." },
-  { to: "/floor-plan", icon: Map, title: "Floor Plan AI", desc: "Upload, sketch or draw layouts. AI zones, places and budgets your space." },
+  { to: "/floor-plan", icon: Map, title: "Floor Plan AI", desc: "Upload a floor plan. A-Eye OCRs labels, detects rooms and calculates areas." },
+  { to: "/valuation", icon: ShieldCheck, title: "Valuation & Insurance", desc: "Item-level replacement values from real UAE retail references." },
   { to: "/pricing", icon: ShoppingBag, title: "Purchase Finder", desc: "Aggregated UAE pricing across Pan Emirates, Danube, IKEA, Home Centre." },
   { to: "/companies", icon: Building2, title: "Company Hub", desc: "White-label retail intelligence for furniture partners." },
-  { to: "/investor", icon: TrendingUp, title: "Investor Mode", desc: "ROI, SaaS pricing, conversion analytics — owner only." },
 ];
 
 function HomePage() {
@@ -41,7 +41,7 @@ function HomePage() {
             </p>
             <div className="flex flex-wrap gap-3 mt-8">
               <Link to="/scanner"><GoldButton className="text-base">Start Scanning <ArrowRight className="inline size-4 ml-1" /></GoldButton></Link>
-              <Link to="/investor"><GhostButton className="text-base">Investor Mode</GhostButton></Link>
+              <Link to="/floor-plan"><GhostButton className="text-base">Try Preview Access</GhostButton></Link>
             </div>
 
             <div className="grid grid-cols-3 gap-3 mt-12 max-w-lg">

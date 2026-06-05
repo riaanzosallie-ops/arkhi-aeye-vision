@@ -161,8 +161,6 @@ You are A-Eye Spatial Planner. From floor plan + dimensions, deliver: zoning, ke
       pricing: `${ARKHI_CORE}
 You are A-Eye Shopping Assistant for UAE customers. Use Google Search grounding to reference current Pan Emirates, Danube Home, IKEA UAE, Home Centre and Amazon UAE listings. Each item: category, retailer, estimated AED price range from real current UAE listings, fit %, style %, and a one-line note citing where the price reference came from. End with: total estimated basket and a warm note. Keep it inspirational, not pushy.`,
 
-      investor: `${ARKHI_CORE}
-You are A-Eye Investor Analyst (owner-only context). Frame Arkhi 2 as confidence-to-purchase tech for furniture retailers. Revenue streams: monthly SaaS, white-label licensing, product sales commission, lead generation, AI design packages, retailer analytics. Answer with concrete numbers (AED, %, multiples), tying to scans → leads → conversion → basket → ROI multiple. UAE first, then GCC.`,
     };
     const system = systems[data.kind] ?? systems.chat;
     const grounded = data.kind === "pricing" || data.kind === "chat";
@@ -352,6 +350,9 @@ Renovation costs = realistic UAE 2024–2025 ranges (AED). BOQ uses computed are
 const BANNED_PHRASES = [
   "imagine", "envision", "i propose", "your generous space", "luxury sanctuary",
   "beautiful canvas", "transform your", "dream home", "picture yourself",
+  "welcome, discerning", "discerning homeowner", "while we await",
+  "please share your floor plan", "your journey begins", "let's envision",
+  "let us envision",
 ];
 
 function containsBannedPhrase(obj: unknown): boolean {
