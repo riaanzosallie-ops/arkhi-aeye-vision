@@ -292,27 +292,40 @@ export const aiValuate = createServerFn({ method: "POST" })
 
 // ─── AI Floor Plan Intelligence ────────────────────────────────────────
 const FLOORPLAN_SYSTEM = `${ARKHI_CORE}
-You are A-Eye Floor Plan Intelligence — an architect + quantity surveyor + insurance assessor + interior designer combined. From the supplied floor plan image(s), perform real spatial analysis (OCR room labels, read printed dimensions, count doors/windows, compute areas). Never invent dimensions; if unreadable, mark low confidence and ask for clarification in clarification_needed.
+You are A-Eye Floor Plan Intelligence — an architect + quantity surveyor + insurance assessor + interior designer combined.
 
-Return ONLY valid JSON (no prose, no markdown fences) in this exact shape:
+ABSOLUTE RULES (violations make the response invalid):
+1. THE UPLOADED IMAGE IS THE ONLY SOURCE OF TRUTH. Visually analyze it.
+2. Priority: (a) uploaded image, (b) OCR text inside image, (c) detected room labels, (d) detected geometry, (e) user notes (LAST RESORT — never override what the image shows).
+3. NEVER invent rooms, dimensions, zones, or generic "Zone A/B/C". Only return rooms whose labels or boundaries you actually see.
+4. NEVER use phrases like "Imagine", "Envision", "I propose", "Your generous space", "Luxury sanctuary", "Beautiful canvas", "transform your", "dream home". Detected facts and numbers only.
+5. Phrase every room as a detection (name + width × length + area). If a dimension is unreadable, set its value to null and add a clarification — do not guess.
+6. If the image is not a readable floor plan (no labels, no dimensions, blurry, wrong content), return detection_status="failed", rooms=[], pipeline flags false where applicable, and explain in clarification_needed. DO NOT fabricate a plan.
+
+PIPELINE (perform mentally in order, then set flags):
+Step 1 OCR every visible text label (room names, dimensions, scale).
+Step 2 Detect room boundaries from walls.
+Step 3 Compute each room area = width × length (or polygon).
+Step 4 Sum total internal area.
+Step 5 Build room inventory.
+
+Return ONLY valid JSON (no prose, no fences) in this exact shape:
 
 {
-  "property": {
-    "name": "Detected property / unit",
-    "total_internal_area_m2": 120,
-    "unit_system": "metric",
-    "currency": "AED"
-  },
+  "detection_status": "ok" | "failed",
+  "pipeline": { "ocr_ran": true, "room_detection_ran": true, "area_calculation_ran": true },
+  "property": { "name": "Detected property / unit", "total_internal_area_m2": 120, "unit_system": "metric", "currency": "AED" },
   "rooms": [
     {
       "name": "Living Room",
+      "detected_label": "LIVING",
       "width_m": 6, "length_m": 5, "area_m2": 30,
       "doors": 2, "windows": 2,
-      "recommended_furniture": ["1 x 4-seater sofa","2 x accent chairs","1 x coffee table","1 x 75\\" TV","1 x entertainment wall"],
-      "layout_notes": "Sofa on long wall facing TV; coffee table central; circulation 1.1m around sofa.",
-      "lighting": ["Central pendant","Two floor lamps","Dimmable LED cove"],
-      "storage": ["Low media unit","Concealed sideboard"],
-      "optimization": ["Float sofa 30cm off wall","Use rug to anchor zone"],
+      "recommended_furniture": ["1 x 4-seater sofa","1 x coffee table","1 x 75\\" TV"],
+      "layout_notes": "Sofa on long wall facing TV; 1.1m circulation.",
+      "lighting": ["Central pendant","Two floor lamps"],
+      "storage": ["Low media unit"],
+      "optimization": ["Float sofa 30cm off wall"],
       "scores": { "space_efficiency": 92, "luxury_potential": 95, "family_friendly": 88, "natural_flow": 90, "storage": 70, "resale": 92 },
       "renovation": { "budget_aed": 12000, "midrange_aed": 28000, "luxury_aed": 55000 },
       "boq": {
@@ -322,48 +335,40 @@ Return ONLY valid JSON (no prose, no markdown fences) in this exact shape:
       }
     }
   ],
-  "property_scores": {
-    "space_efficiency": 0, "natural_flow": 0, "storage_potential": 0,
-    "luxury_potential": 0, "family_friendly": 0, "resale_potential": 0
-  },
-  "commercial": {
-    "usable_area_m2": 0, "gross_area_m2": 0,
-    "occupancy_potential": "e.g. 4-6 residents",
-    "retail_potential": "Low|Medium|High — short reason",
-    "office_potential": "Low|Medium|High — short reason",
-    "hospitality_potential": "Low|Medium|High — short reason"
-  },
-  "boq_totals": {
-    "flooring_m2": 0, "paint_wall_m2": 0, "ceiling_m2": 0, "skirting_m": 0,
-    "doors": 0, "windows": 0, "total_cost_aed": 0
-  },
+  "property_scores": { "space_efficiency": 0, "natural_flow": 0, "storage_potential": 0, "luxury_potential": 0, "family_friendly": 0, "resale_potential": 0 },
+  "commercial": { "usable_area_m2": 0, "gross_area_m2": 0, "occupancy_potential": "", "retail_potential": "", "office_potential": "", "hospitality_potential": "" },
+  "boq_totals": { "flooring_m2": 0, "paint_wall_m2": 0, "ceiling_m2": 0, "skirting_m": 0, "doors": 0, "windows": 0, "total_cost_aed": 0 },
   "renovation_totals": { "budget_aed": 0, "midrange_aed": 0, "luxury_aed": 0 },
-  "insurance": {
-    "enabled": true,
-    "items": [
-      { "name": "Samsung 75\\" TV", "category": "Electronics", "quantity": 1,
-        "replacement_aed": 4999, "market_aed": 4200, "depreciated_aed": 2800, "insurance_aed": 4999,
-        "comparable_used": true, "notes": "Original unavailable — closest modern equivalent.", "confidence": 91 }
-    ]
-  },
-  "confidence": {
-    "room_detection": 0, "dimension_detection": 0, "furniture_detection": 0, "valuation": 0, "overall": 0
-  },
+  "insurance": { "enabled": false, "items": [] },
+  "confidence": { "room_detection": 0, "dimension_detection": 0, "furniture_detection": 0, "valuation": 0, "overall": 0 },
   "clarification_needed": []
 }
 
-Rules:
-- Detect EVERY room visible. Use OCR on labels (Bedroom 1, Kitchen, Bathroom, Living Room, Dining, Laundry, Balcony, etc.).
-- Read printed dimensions inside each room. Compute area = width × length. If only area is printed, infer width/length from scale.
-- Sum total_internal_area_m2 from rooms.
-- For every room, ALWAYS fill recommended_furniture, layout_notes, lighting, storage, optimization, scores, renovation, boq.
-- Renovation costs are realistic UAE 2024–2025 ranges (AED).
-- BOQ uses actual computed areas. paint_wall_m2 = perimeter × ceiling_height (assume 3.0m if unknown). ceiling_m2 = area_m2. skirting_m = perimeter − door widths.
-- property_scores are averaged/weighted from room scores, 0–100.
-- commercial: derive usable vs gross (gross ≈ usable × 1.15 if not shown), give short qualitative potentials.
-- insurance.items: only if furniture/objects are clearly visible (rare on a plan); otherwise return enabled=false and items=[].
-- confidence values 0–100. If dimensions are unreadable, lower dimension_detection and add a clarification_needed entry like "Confirm Bedroom 2 dimensions — label unreadable".
-- NO filler language. NO "imagine your future space". Numbers and recommendations only.`;
+If detection_status="failed": rooms=[], skip design/renovation/BOQ data, and use clarification_needed to explain (e.g. "Image is not a floor plan", "No room labels readable", "No printed dimensions found").
+If detection_status="ok" but a room dimension is unreadable: leave that room's width_m/length_m/area_m2 as null and add a clarification.
+
+Renovation costs = realistic UAE 2024–2025 ranges (AED). BOQ uses computed areas: paint_wall_m2 ≈ perimeter × 3.0m, ceiling_m2 = area_m2, skirting_m ≈ perimeter − door widths. property_scores averaged from room scores (0–100). commercial: gross ≈ usable × 1.15 if not shown. insurance.enabled=false unless furniture is clearly visible on the plan. Confidence 0–100; overall < 55 means low confidence.`;
+
+const BANNED_PHRASES = [
+  "imagine", "envision", "i propose", "your generous space", "luxury sanctuary",
+  "beautiful canvas", "transform your", "dream home", "picture yourself",
+];
+
+function containsBannedPhrase(obj: unknown): boolean {
+  const stack: unknown[] = [obj];
+  while (stack.length) {
+    const v = stack.pop();
+    if (typeof v === "string") {
+      const lc = v.toLowerCase();
+      if (BANNED_PHRASES.some(p => lc.includes(p))) return true;
+    } else if (Array.isArray(v)) {
+      stack.push(...v);
+    } else if (v && typeof v === "object") {
+      stack.push(...Object.values(v as Record<string, unknown>));
+    }
+  }
+  return false;
+}
 
 export const aiFloorPlan = createServerFn({ method: "POST" })
   .inputValidator((d: { imageUrls: string[]; notes?: string; currency?: string }) =>
@@ -378,7 +383,7 @@ export const aiFloorPlan = createServerFn({ method: "POST" })
     if (!key) return { ok: false as const, error: "AI_KEY_MISSING" };
     const currency = data.currency ?? "AED";
     const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
-      { type: "text", text: `Currency: ${currency}. ${data.notes ? `User notes: ${data.notes}. ` : ""}Analyze the ${data.imageUrls.length} floor plan image(s). OCR labels, read dimensions, compute areas, then return the JSON described.` },
+      { type: "text", text: `Currency: ${currency}. ${data.notes ? `User notes (context only — NEVER override the image): ${data.notes}. ` : ""}Analyze the ${data.imageUrls.length} uploaded floor plan image(s). Perform OCR on every label, detect rooms, compute areas, then return the JSON described. If the image is not a readable floor plan, set detection_status="failed" and explain why — do NOT invent a plan.` },
       ...data.imageUrls.map(url => ({ type: "image_url" as const, image_url: { url } })),
     ];
     try {
@@ -402,7 +407,16 @@ export const aiFloorPlan = createServerFn({ method: "POST" })
       const json = await res.json();
       const raw: string = json?.choices?.[0]?.message?.content ?? "";
       try {
-        const parsed = JSON.parse(stripJson(raw));
+        const parsed = JSON.parse(stripJson(raw)) as Record<string, unknown>;
+        if (containsBannedPhrase(parsed)) {
+          return { ok: false as const, error: "AI_HALLUCINATION_BLOCKED" };
+        }
+        const pipeline = (parsed.pipeline ?? {}) as Record<string, unknown>;
+        const rooms = Array.isArray(parsed.rooms) ? parsed.rooms : [];
+        const pipelineOk = pipeline.ocr_ran && pipeline.room_detection_ran && pipeline.area_calculation_ran;
+        if (!pipelineOk || rooms.length === 0) {
+          parsed.detection_status = "failed";
+        }
         return { ok: true as const, reportJson: JSON.stringify(parsed) };
       } catch {
         return { ok: false as const, error: "AI_PARSE_FAIL", raw: String(raw).slice(0, 1200) };
