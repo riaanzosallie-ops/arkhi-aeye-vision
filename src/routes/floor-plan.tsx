@@ -95,9 +95,11 @@ function FloorPlan() {
           setErr("AI returned an unreadable report.");
         }
       } else {
-        setErr(res.error === "AI_KEY_MISSING" ? "AI setup required" : `AI error: ${res.error}`);
-      }
-    } finally {
+        setErr(
+          res.error === "AI_KEY_MISSING" ? "AI setup required" :
+          res.error === "AI_HALLUCINATION_BLOCKED" ? "AI response was generic, not grounded in the image. Please re-run or upload a clearer plan." :
+          `AI error: ${res.error}`,
+        );
       setBusy(false);
     }
   };
