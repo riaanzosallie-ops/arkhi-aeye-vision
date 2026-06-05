@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { trackAi } from "@/lib/analytics";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Upload, FileText, Printer } from "lucide-react";
+import { Upload, FileText, Printer, Copy, Share2, Download, Save, Lock } from "lucide-react";
 import { PageHeader, LuxeCard, GoldButton, GhostButton } from "@/components/ui-kit";
 import { useAuth } from "@/lib/useAuth";
 import { uploadUserFile } from "@/lib/upload";
