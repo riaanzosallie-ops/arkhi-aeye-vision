@@ -51,6 +51,55 @@ type Report = {
 const fmtAED = (n?: number) => (typeof n === "number" ? `AED ${n.toLocaleString()}` : "—");
 const pct = (n?: number) => (typeof n === "number" ? `${Math.round(n)}%` : "—");
 
+function buildReportText(report: Report): string {
+  const lines: string[] = [];
+  const ts = new Date().toLocaleString();
+  const status = report.detection_status === "failed" ? "Analysis Failed" : "Completed";
+  lines.push("PROPERTY DETECTION REPORT");
+  lines.push(`Generated: ${ts}`);
+  lines.push("");
+  lines.push(`File Received: Yes`);
+  lines.push(`OCR Status: ${report.pipeline?.ocr_ran ? "Completed" : "Failed"}`);
+  lines.push(`Status: ${status}`);
+  if (report.detection_status === "failed") {
+    lines.push("");
+    lines.push("Reason: Unable to confidently detect room labels or dimensions.");
+    if (report.clarification_needed?.length) {
+      lines.push("");
+      lines.push("Details:");
+      report.clarification_needed.forEach(c => lines.push(`  - ${c}`));
+    }
+    lines.push("");
+    lines.push("Recommendations:");
+    lines.push("  - Upload a clearer image");
+    lines.push("  - Upload a PDF page exported as PNG/JPG");
+    lines.push("  - Ensure room labels and printed dimensions are visible");
+    lines.push("  - Avoid cropped or low-resolution screenshots");
+    return lines.join("\n");
+  }
+  const rooms = report.rooms ?? [];
+  lines.push(`Rooms Detected: ${rooms.length}`);
+  lines.push(`Total Internal Area: ${report.property?.total_internal_area_m2 ?? "—"} m²`);
+  lines.push(`Confidence: ${typeof report.confidence?.overall === "number" ? `${Math.round(report.confidence.overall)}%` : "—"}`);
+  lines.push("");
+  lines.push("ROOM BREAKDOWN");
+  lines.push("Room Name | Dimensions | Area | Confidence");
+  rooms.forEach(r => {
+    const dim = r.width_m && r.length_m ? `${r.width_m}m x ${r.length_m}m` : "Not confidently detected";
+    const area = r.area_m2 ? `${r.area_m2} m²` : "—";
+    const conf = report.confidence?.room_detection ? `${Math.round(report.confidence.room_detection)}%` : "—";
+    lines.push(`${r.name} | ${dim} | ${area} | ${conf}`);
+  });
+  if (report.clarification_needed?.length) {
+    lines.push("");
+    lines.push("Clarifications:");
+    report.clarification_needed.forEach(c => lines.push(`  - ${c}`));
+  }
+  lines.push("");
+  lines.push("— ARKHI A-Eye Spatial Intelligence");
+  return lines.join("\n");
+}
+
 function fileToDataUrl(f: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
